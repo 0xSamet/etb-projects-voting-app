@@ -4,6 +4,8 @@ import { Button, Input, Form, Icon, Menu, Segment } from "semantic-ui-react";
 import { useAlert } from "react-alert";
 import axios from "axios";
 import { object } from "joi";
+import { useSelector, useDispatch } from "react-redux";
+import { adminLoginSuccess } from "../../store";
 
 export default function Loginform() {
   const [activeItem, setActiveItem] = useState("login");
@@ -32,6 +34,8 @@ export default function Loginform() {
     },
   });
   const alert = useAlert();
+  const state = useSelector((state) => state);
+  const dispatch = useDispatch();
 
   const loginInputChangeHandler = (e) => {
     setLoginForm({
@@ -44,11 +48,36 @@ export default function Loginform() {
     });
   };
 
-  const submitLoginForm = async () => {
-    // axios.post("/api/admin/register", {
-    //   username: loginForm.username.value,
-    //   password: loginForm
-    // })
+  const submitLoginForm = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post("/api/admin/login", {
+        username: loginForm.username.value,
+        password: loginForm.password.value,
+      });
+
+      if (
+        response &&
+        response.data &&
+        response.data.success &&
+        response.data.username
+      ) {
+        dispatch(adminLoginSuccess(response.data.username));
+      }
+    } catch (e) {
+      if (e.response && e.response.data && e.response.data.message) {
+        alert.error(e.response.data.message);
+        if (e.response.data.path) {
+          setLoginForm({
+            ...loginForm,
+            [e.response.data.path]: {
+              ...loginForm[e.response.data.path],
+              error: true,
+            },
+          });
+        }
+      }
+    }
   };
 
   const registerInputChangeHandler = (e) => {
@@ -108,7 +137,7 @@ export default function Loginform() {
 
       <Segment className="admin-login-form-wrapper">
         {activeItem === "login" ? (
-          <Form>
+          <Form onSubmit={submitLoginForm}>
             <Form.Field>
               <label>Username</label>
               <Input

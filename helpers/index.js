@@ -1,4 +1,5 @@
 import nextConnect from "next-connect";
+import jwt from "jsonwebtoken";
 
 const handler = nextConnect({
   onError(error, req, res) {
@@ -13,4 +14,20 @@ const handler = nextConnect({
   },
 });
 
-export { handler };
+const authenticateAdmin = (fn) => async (req, res) => {
+  return new Promise((resolve) => {
+    const token = req.cookies["token"] || "";
+
+    jwt.verify(token, process.env.JWT_SECRET, async function (err, decoded) {
+      if (!err && decoded) {
+        await fn(req, res);
+        resolve();
+      } else {
+        res.status(401).json({ message: "Not Authenticated!" });
+        resolve();
+      }
+    });
+  });
+};
+
+export { handler, authenticateAdmin };

@@ -7,7 +7,9 @@ import Footer from "../components/Footer";
 import Alert from "../components/Alert";
 
 import { useRouter } from "next/router";
-import { positions, Provider } from "react-alert";
+import { positions, Provider as ReactAlertProvider } from "react-alert";
+import { Provider as ReduxProvider } from "react-redux";
+import { wrapper } from "../store";
 
 const alertOptions = {
   timeout: 5000,
@@ -21,9 +23,9 @@ function MyApp({ Component, pageProps }) {
     <div className="main-wrapper">
       <Header />
       <main className="content">
-        <Provider template={Alert} {...alertOptions}>
+        <ReactAlertProvider template={Alert} {...alertOptions}>
           <Component {...pageProps} />
-        </Provider>
+        </ReactAlertProvider>
       </main>
       <Footer />
     </div>
@@ -31,9 +33,9 @@ function MyApp({ Component, pageProps }) {
     <div className="main-wrapper">
       <AdminHeader />
       <main className="content">
-        <Provider template={Alert} {...alertOptions}>
+        <ReactAlertProvider template={Alert} {...alertOptions}>
           <Component {...pageProps} />
-        </Provider>
+        </ReactAlertProvider>
       </main>
       <Footer />
     </div>
@@ -41,13 +43,23 @@ function MyApp({ Component, pageProps }) {
     <div className="main-wrapper">
       <Header />
       <main className="content">
-        <Provider template={Alert} {...alertOptions}>
+        <ReactAlertProvider template={Alert} {...alertOptions}>
           <Component {...pageProps} />
-        </Provider>
+        </ReactAlertProvider>
       </main>
       <Footer />
     </div>
   );
 }
 
-export default MyApp;
+export async function getInitialProps({ Component, ctx }) {
+  const pageProps = Component.getInitialProps
+    ? await Component.getInitialProps(ctx)
+    : {};
+
+  return {
+    pageProps,
+  };
+}
+
+export default wrapper.withRedux(MyApp);
