@@ -19,6 +19,13 @@ export default function AdminHeader() {
       <div className="header-right">
         {state.admin.loggedIn && (
           <>
+            <ul className="menu">
+              <li className="active">
+                <Link href="/admin">
+                  <a>PROJECTS</a>
+                </Link>
+              </li>
+            </ul>
             <Popup
               key={state.admin.username}
               header={state.admin.username}

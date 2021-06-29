@@ -1,4 +1,15 @@
+//semantic-ui
 import "semantic-ui-css/semantic.min.css";
+
+//react-datetimepicker
+import "react-calendar/dist/Calendar.css";
+import "react-clock/dist/Clock.css";
+import "@wojtekmaj/react-datetimerange-picker/dist/DateTimeRangePicker.css";
+
+//draft-js (admin-editor)
+import "draft-js/dist/Draft.css";
+import "../styles/adminEditor.css";
+
 import "../styles/global.scss";
 
 import Header from "../components/Header";
