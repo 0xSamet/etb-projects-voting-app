@@ -1,9 +1,9 @@
-import { authenticateAdmin, setDefaultHeaders } from "../../../middleware";
+import { authenticateAdmin, setDefaultHeaders } from "../../../../middleware";
 import Joi from "joi";
 
-import connectDb from "../../../db/connect";
+import connectDb from "../../../../db/connect";
 
-import Project from "../../../db/models/Project";
+import Project from "../../../../db/models/Project";
 
 const updateProjectSchema = Joi.object({
   name: Joi.string().required().trim(),
