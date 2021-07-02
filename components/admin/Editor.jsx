@@ -14,23 +14,7 @@ class MyEditor extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      editorState: this.props.defaultState
-        ? EditorState.createWithContent(
-            convertFromRaw(JSON.parse(this.props.defaultState))
-          )
-        : EditorState.createEmpty(),
-    };
-
     this.focus = () => this.refs.editor.focus();
-    this.onChange = (editorState) => {
-      const raw = convertToRaw(editorState.getCurrentContent());
-      this.setState({ editorState });
-      this.props.setProjectInputs({
-        ...this.props.projectInputs,
-        description: JSON.stringify(raw),
-      });
-    };
 
     this.handleKeyCommand = this._handleKeyCommand.bind(this);
     this.mapKeyToEditorCommand = this._mapKeyToEditorCommand.bind(this);
@@ -41,7 +25,7 @@ class MyEditor extends React.Component {
   _handleKeyCommand(command, editorState) {
     const newState = RichUtils.handleKeyCommand(editorState, command);
     if (newState) {
-      this.onChange(newState);
+      this.props.onChange(newState);
       return true;
     }
     return false;
@@ -51,11 +35,11 @@ class MyEditor extends React.Component {
     if (e.keyCode === 9 /* TAB */) {
       const newEditorState = RichUtils.onTab(
         e,
-        this.state.editorState,
+        this.props.editorState,
         4 /* maxDepth */
       );
-      if (newEditorState !== this.state.editorState) {
-        this.onChange(newEditorState);
+      if (newEditorState !== this.props.editorState) {
+        this.props.onChange(newEditorState);
       }
       return;
     }
@@ -63,18 +47,19 @@ class MyEditor extends React.Component {
   }
 
   _toggleBlockType(blockType) {
-    this.onChange(RichUtils.toggleBlockType(this.state.editorState, blockType));
+    this.props.onChange(
+      RichUtils.toggleBlockType(this.props.editorState, blockType)
+    );
   }
 
   _toggleInlineStyle(inlineStyle) {
-    this.onChange(
-      RichUtils.toggleInlineStyle(this.state.editorState, inlineStyle)
+    this.props.onChange(
+      RichUtils.toggleInlineStyle(this.props.editorState, inlineStyle)
     );
   }
 
   render() {
-    const { editorState } = this.state;
-
+    const { editorState } = this.props;
     // If the user changes block type before entering any text, we can
     // either style the placeholder or hide it. Let's just hide it now.
     let className = "RichEditor-editor";
@@ -102,7 +87,7 @@ class MyEditor extends React.Component {
             editorState={editorState}
             handleKeyCommand={this.handleKeyCommand}
             keyBindingFn={this.mapKeyToEditorCommand}
-            onChange={this.onChange}
+            onChange={this.props.onChange}
             placeholder="Tell a story..."
             ref="editor"
             spellCheck={false}

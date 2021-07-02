@@ -2,10 +2,25 @@ import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 import { Button, Icon, Popup } from "semantic-ui-react";
 import { adminLogout } from "../../store";
+import axios from "axios";
 
 export default function AdminHeader() {
   const state = useSelector((state) => state);
   const dispatch = useDispatch();
+
+  const logout = async (e) => {
+    try {
+      const response = await axios.post("/api/admin/logout");
+      console.log(response);
+      if (response && response.data && response.data.success) {
+        dispatch(adminLogout());
+      }
+    } catch (e) {
+      if (e.response && e.response.data && e.response.data.message) {
+        alert.error(e.response.data.message);
+      }
+    }
+  };
 
   return (
     <header>
@@ -36,7 +51,7 @@ export default function AdminHeader() {
               loading={false}
               labelPosition="left"
               style={{ backgroundColor: "#dd4b39", color: "#fff" }}
-              onClick={() => dispatch(adminLogout())}
+              onClick={() => logout()}
             >
               <Icon name="sign-out" />
               Logout

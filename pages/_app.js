@@ -1,14 +1,12 @@
 //semantic-ui
 import "semantic-ui-css/semantic.min.css";
 
-//react-datetimepicker
-import "react-calendar/dist/Calendar.css";
-import "react-clock/dist/Clock.css";
-import "@wojtekmaj/react-datetimerange-picker/dist/DateTimeRangePicker.css";
-
 //draft-js (admin-editor)
 import "draft-js/dist/Draft.css";
 import "../styles/adminEditor.css";
+
+//react datetime
+import "react-datetime/css/react-datetime.css";
 
 import "../styles/global.scss";
 
@@ -31,35 +29,35 @@ function MyApp({ Component, pageProps }) {
   const router = useRouter();
 
   return router.route === "/404" ? (
-    <div className="main-wrapper">
-      <Header />
-      <main className="content">
-        <ReactAlertProvider template={Alert} {...alertOptions}>
+    <ReactAlertProvider template={Alert} {...alertOptions}>
+      <div className="main-wrapper">
+        <Header />
+        <main className="content">
           <Component {...pageProps} />
-        </ReactAlertProvider>
-      </main>
-      <Footer />
-    </div>
+        </main>
+        <Footer />
+      </div>
+    </ReactAlertProvider>
   ) : router.asPath.slice(0, 6) === "/admin" ? (
-    <div className="main-wrapper">
-      <AdminHeader />
-      <main className="content">
-        <ReactAlertProvider template={Alert} {...alertOptions}>
+    <ReactAlertProvider template={Alert} {...alertOptions}>
+      <div className="main-wrapper">
+        <AdminHeader />
+        <main className="content">
           <Component {...pageProps} />
-        </ReactAlertProvider>
-      </main>
-      <Footer />
-    </div>
+        </main>
+        <Footer />
+      </div>
+    </ReactAlertProvider>
   ) : (
-    <div className="main-wrapper">
-      <Header />
-      <main className="content">
-        <ReactAlertProvider template={Alert} {...alertOptions}>
+    <ReactAlertProvider template={Alert} {...alertOptions}>
+      <div className="main-wrapper">
+        <Header />
+        <main className="content">
           <Component {...pageProps} />
-        </ReactAlertProvider>
-      </main>
-      <Footer />
-    </div>
+        </main>
+        <Footer />
+      </div>
+    </ReactAlertProvider>
   );
 }
 

@@ -5,7 +5,14 @@ const projectSchema = new mongoose.Schema({
   description: String,
   start_date: String,
   end_date: String,
-  participants: [{ author: String, source: String, voteCount: Number }],
+  sort_order: Number,
+  participants: [
+    {
+      author: String,
+      source: String,
+      voteCount: Number,
+    },
+  ],
   alreadyVoted: [String],
 });
 

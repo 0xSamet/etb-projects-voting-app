@@ -11,20 +11,23 @@ import {
   Form,
   Segment,
   FormField,
+  Loader,
+  Dimmer,
 } from "semantic-ui-react";
 import { useSelector } from "react-redux";
-import { useState } from "react";
-import Editor from "../../../components/admin/Editor";
+import { useState, useEffect } from "react";
+import Editor from "../../../../components/admin/Editor";
 import produce from "immer";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useAlert } from "react-alert";
-import { EditorState, convertToRaw } from "draft-js";
+import { EditorState, convertFromRaw, convertToRaw } from "draft-js";
 import ReactDateTime from "react-datetime";
 
 export default function AdminAddProject() {
   const state = useSelector((state) => state);
   const [projectInputs, setProjectInputs] = useState({
+    loading: true,
     name: "",
     description: EditorState.createEmpty(),
     sort_order: 0,
@@ -34,6 +37,35 @@ export default function AdminAddProject() {
   });
   const router = useRouter();
   const alert = useAlert();
+
+  useEffect(() => {
+    if (router.query.projectId) {
+      //console.log(router.query);
+      const getProject = async () => {
+        try {
+          const response = await axios(
+            `/api/projects/${router.query.projectId}`
+          );
+
+          if (response && response.data && response.data.project) {
+            setProjectInputs({
+              ...response.data.project,
+              start_date: new Date(Number(response.data.project.start_date)),
+              end_date: new Date(Number(response.data.project.end_date)),
+              description: EditorState.createWithContent(
+                convertFromRaw(JSON.parse(response.data.project.description))
+              ),
+            });
+          }
+        } catch (e) {
+          if (e.response && e.response.data && e.response.data.message) {
+            alert.error(e.response.data.message);
+          }
+        }
+      };
+      getProject();
+    }
+  }, [router.query.projectId]);
 
   const simpleInputChange = (e) => {
     return setProjectInputs({
@@ -47,36 +79,48 @@ export default function AdminAddProject() {
       ...projectInputs,
       participants: [
         ...projectInputs.participants,
-        { id: projectInputs.participants.length, author: "", source: "" },
+        {
+          _id: String(projectInputs.participants.length),
+          author: "",
+          source: "",
+          newParticipant: true,
+          deleted: false,
+        },
       ],
     });
   };
 
   const submitForm = async () => {
-    try {
-      const response = await axios.post("/api/projects", {
-        ...projectInputs,
-        participants: projectInputs.participants.map((participant) => {
-          return {
-            author: participant.author,
-            source: participant.source,
-          };
-        }),
-        start_date: projectInputs.start_date.getTime().toString(),
-        end_date: projectInputs.end_date.getTime().toString(),
-        description: JSON.stringify(
-          convertToRaw(projectInputs.description.getCurrentContent())
-        ),
-      });
+    if (router.query && router.query.projectId) {
+      try {
+        console.log("axios");
+        const response = await axios.put(
+          `/api/projects/${router.query.projectId}`,
+          {
+            name: projectInputs.name,
+            description: projectInputs.description,
+            start_date: projectInputs.start_date.getTime().toString(),
+            end_date: projectInputs.end_date.getTime().toString(),
+            sort_order: projectInputs.sort_order,
+            description: JSON.stringify(
+              convertToRaw(projectInputs.description.getCurrentContent())
+            ),
+            participants: projectInputs.participants,
+          }
+        );
 
-      if (response && response.data && response.data.success) {
-        alert.success("Success !");
-        router.push("/admin");
+        if (response && response.data && response.data.project) {
+          alert.success("Success !");
+          router.push("/admin");
+        }
+      } catch (e) {
+        if (e.response && e.response.data && e.response.data.message) {
+          alert.error(e.response.data.message);
+        }
+        alert.error(e.message);
       }
-    } catch (e) {
-      if (e.response && e.response.data && e.response.data.message) {
-        alert.error(e.response.data.message);
-      }
+    } else {
+      router.push("/admin");
     }
   };
 
@@ -153,8 +197,11 @@ export default function AdminAddProject() {
         return (
           <Tab.Pane attached={false}>
             {projectInputs.participants.map((participant) => {
+              if (participant.deleted) {
+                return false;
+              }
               return (
-                <Segment raised key={""}>
+                <Segment raised key={participant._id}>
                   <Form.Field
                     style={{
                       display: "flex",
@@ -168,17 +215,23 @@ export default function AdminAddProject() {
                       circular
                       style={{ cursor: "pointer" }}
                       onClick={() => {
-                        const participantId = participant.id;
+                        const participantId = participant._id;
                         setProjectInputs(
                           produce(projectInputs, (draft) => {
                             const findIndex = draft.participants.findIndex(
-                              (participant) => participant.id === participantId
+                              (participant) => participant._id === participantId
                             );
                             if (findIndex || findIndex === 0) {
-                              draft.participants = draft.participants.filter(
-                                (participant) =>
-                                  participant.id !== participantId
-                              );
+                              draft.participants[findIndex].deleted = true;
+
+                              if (draft.participants[findIndex].author == "") {
+                                draft.participants[findIndex].author =
+                                  "DELETED";
+                              }
+                              if (draft.participants[findIndex].source == "") {
+                                draft.participants[findIndex].source =
+                                  "DELETED";
+                              }
                             }
                           })
                         );
@@ -192,11 +245,11 @@ export default function AdminAddProject() {
                       type="text"
                       name="author"
                       onChange={(e) => {
-                        const participantId = participant.id;
+                        const participantId = participant._id;
                         setProjectInputs(
                           produce(projectInputs, (draft) => {
                             const findIndex = draft.participants.findIndex(
-                              (participant) => participant.id === participantId
+                              (participant) => participant._id === participantId
                             );
                             if (findIndex || findIndex === 0) {
                               draft.participants[findIndex]["author"] =
@@ -214,11 +267,11 @@ export default function AdminAddProject() {
                       type="text"
                       name="source"
                       onChange={(e) => {
-                        const participantId = participant.id;
+                        const participantId = participant._id;
                         setProjectInputs(
                           produce(projectInputs, (draft) => {
                             const findIndex = draft.participants.findIndex(
-                              (participant) => participant.id === participantId
+                              (participant) => participant._id === participantId
                             );
                             if (findIndex || findIndex === 0) {
                               draft.participants[findIndex]["source"] =
@@ -245,26 +298,45 @@ export default function AdminAddProject() {
   ];
 
   return (
-    <div className="admin-add-project-page">
+    <div className="admin-update-project-page">
       <Form>
-        <Tab
-          className="tabs add-project-tabs"
-          menu={{ pointing: true }}
-          panes={panes}
-        />
-        <Button
-          className="big-button"
-          type="submit"
-          fluid
-          icon
-          size="small"
-          color="blue"
-          onClick={submitForm}
-        >
-          <Icon name="add square" />
-          Add Project
-        </Button>
+        {projectInputs.loading ? (
+          <Dimmer active inverted style={{ minHeight: 300 }}>
+            <Loader size="medium">Loading</Loader>
+          </Dimmer>
+        ) : (
+          <>
+            <Tab
+              className="tabs update-project-tabs"
+              menu={{ pointing: true }}
+              panes={panes}
+            />
+            <Button
+              className="big-button"
+              type="submit"
+              fluid
+              icon
+              size="small"
+              color="blue"
+              onClick={submitForm}
+            >
+              <Icon name="save" />
+              Edit Project
+            </Button>
+          </>
+        )}
       </Form>
     </div>
   );
 }
+
+// EditorState.createWithContent(
+//           convertFromRaw(JSON.parse(this.props.defaultState))
+//        )
+
+/*      const raw = convertToRaw(editorState.getCurrentContent());
+      this.setState({ editorState });
+      this.props.setProjectInputs({
+        ...this.props.projectInputs,
+        description: JSON.stringify(raw),
+      });*/
