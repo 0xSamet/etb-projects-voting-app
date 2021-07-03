@@ -1,7 +1,15 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useState, useMemo, useEffect } from "react";
-import { Button, Divider, Header, Icon, Grid } from "semantic-ui-react";
+import {
+  Button,
+  Divider,
+  Header,
+  Icon,
+  Grid,
+  Dimmer,
+  Loader,
+} from "semantic-ui-react";
 import axios from "axios";
 import { useAlert } from "react-alert";
 import EditorView from "../components/EditorView";
@@ -47,10 +55,18 @@ export default function Home() {
 
   const renderProjects = useMemo(() => {
     if (projects.loading) {
-      return <div>loading ...</div>;
+      return (
+        <Dimmer active inverted style={{ minHeight: 300 }}>
+          <Loader size="medium">Loading</Loader>
+        </Dimmer>
+      );
     }
     if (projects.data && projects.data.length === 0) {
-      return <div>proje yokki</div>;
+      return (
+        <div style={{ padding: 15, textAlign: "center" }}>
+          <Header>There is no project</Header>
+        </div>
+      );
     }
     if (projects.data && projects.data.length > 0) {
       return projects.data.map((project) => {

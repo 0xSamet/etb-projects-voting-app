@@ -14,6 +14,7 @@ export default function Header() {
       const response = await getBlockChain();
       if (response && response.address) {
         dispatch(userLoginSuccess(response.address));
+        console.log(response);
       }
     } catch (e) {
       alert.error(e);
@@ -46,6 +47,9 @@ export default function Header() {
               key={state.user.username}
               header={state.user.username}
               trigger={<Button icon="user" style={{ marginRight: 10 }} />}
+              pinned
+              on="click"
+              position="bottom right"
             />
             <Button
               icon

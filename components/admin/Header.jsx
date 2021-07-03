@@ -45,6 +45,8 @@ export default function AdminHeader() {
               key={state.admin.username}
               header={state.admin.username}
               trigger={<Button icon="user" style={{ marginRight: 10 }} />}
+              pinned
+              position="bottom right"
             />
             <Button
               icon
