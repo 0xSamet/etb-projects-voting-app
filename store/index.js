@@ -8,7 +8,8 @@ const initialState = {
   },
   user: {
     loggedIn: false,
-    username: "",
+    wallet: "",
+    connectedWith: "",
   },
 };
 
@@ -25,10 +26,11 @@ export const adminLoginSuccess = (username) => ({
   },
 });
 
-export const userLoginSuccess = (username) => ({
+export const userLoginSuccess = (payload) => ({
   type: USER_LOGIN_SUCCESS,
   payload: {
-    username,
+    wallet: payload.wallet,
+    connectedWith: payload.connectedWith,
   },
 });
 
@@ -69,7 +71,8 @@ const reducer = (state = initialState, action) => {
         user: {
           ...state.user,
           loggedIn: true,
-          username: action.payload.username,
+          wallet: action.payload.wallet,
+          connectedWith: action.payload.connectedWith,
         },
       };
     case "USER_LOGOUT":
@@ -78,7 +81,7 @@ const reducer = (state = initialState, action) => {
         user: {
           ...state.user,
           loggedIn: false,
-          username: "",
+          wallet: "",
         },
       };
     default:

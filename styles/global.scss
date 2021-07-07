@@ -40,6 +40,36 @@ a {
   }
 }
 
+//header login options
+.login-options {
+  .login-btn {
+    display: flex;
+    align-items: center;
+    background: #e0e1e2;
+    border-radius: 0.28571429rem;
+    overflow: hidden;
+    cursor: pointer;
+    .btn-icon {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 8px;
+      background: #d6d7d8;
+      svg {
+        max-width: 20px;
+        max-height: 20px;
+      }
+    }
+    .btn-text {
+      padding: 8px;
+      font-weight: 700;
+    }
+    &.wallet-connect-btn {
+      margin-top: 10px;
+    }
+  }
+}
+
 .main-wrapper {
   min-height: 100%;
   max-width: 1800px;
@@ -50,7 +80,7 @@ a {
     display: flex;
     align-items: center;
     padding: 0px 15px;
-    background: linear-gradient(130deg, #5895d3 0, #78378c 100%);
+    background: linear-gradient(130deg, #5895d3 0, #a061b3 100%);
     border-bottom-left-radius: 0.28571429rem;
     border-bottom-right-radius: 0.28571429rem;
     .header-logo {
@@ -58,6 +88,7 @@ a {
         max-width: 210px;
       }
     }
+
     .header-right {
       display: flex;
       flex: 0 1 100%;
@@ -289,7 +320,7 @@ a {
     background-color: #fff;
     border-top-left-radius: 0.28571429rem;
     border-top-right-radius: 0.28571429rem;
-    background: linear-gradient(130deg, #5895d3 0, #78378c 100%);
+    background: linear-gradient(130deg, #5895d3 0, #a061b3 100%);
     .footer-left {
       flex: 0 0 50%;
       display: flex;
