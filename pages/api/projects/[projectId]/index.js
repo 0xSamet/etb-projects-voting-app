@@ -7,6 +7,7 @@ import Project from "../../../../db/models/Project";
 
 const updateProjectSchema = Joi.object({
   name: Joi.string().required().trim(),
+  short_description: Joi.string().required().trim(),
   description: Joi.string().required().trim(),
   start_date: Joi.string().trim().required(),
   end_date: Joi.string().trim().required(),
@@ -79,6 +80,7 @@ export default async (req, res) => {
       }
 
       projectToUpdate.name = validateRequest.name;
+      projectToUpdate.short_description = validateRequest.short_description;
       projectToUpdate.description = validateRequest.description;
       projectToUpdate.start_date = validateRequest.start_date;
       projectToUpdate.end_date = validateRequest.end_date;

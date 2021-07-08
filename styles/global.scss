@@ -74,6 +74,44 @@ a {
   min-height: 100%;
   max-width: 1800px;
   margin: 0 auto;
+  .header-top {
+    display: flex;
+    justify-content: center;
+    padding: 0px 15px 0px 15px;
+    background: linear-gradient(130deg, #5895d3 0, #a061b3 100%);
+    color: #38b1b1;
+    .token-holding-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 5px;
+      position: relative;
+      .title,
+      .tokens {
+        z-index: 1;
+        font-size: 12px;
+      }
+      .title {
+        font-weight: 800;
+      }
+      .tokens {
+        font-weight: 700;
+      }
+      &::after {
+        content: "";
+        position: absolute;
+        background: #333;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        height: 60px;
+        z-index: 0;
+        border-bottom-left-radius: 100%;
+        border-bottom-right-radius: 100%;
+      }
+    }
+  }
   header {
     margin: 0 auto;
     min-height: 65px;
@@ -208,6 +246,7 @@ a {
       }
       .options-wrapper {
         padding: 75px 630px 0 230px;
+        position: relative;
         .option {
           margin: 15px 0px;
 
@@ -261,6 +300,43 @@ a {
         .submit-vote-row {
           display: flex;
           justify-content: flex-end;
+          button {
+            margin: 0;
+          }
+        }
+        .vote-need-login-wrapper {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 75px 630px 0 230px;
+          overflow: hidden;
+          pointer-events: none;
+          .message-box {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(33, 33, 33, 0.75);
+            z-index: 1;
+            border-radius: 0.28571429rem;
+            pointer-events: auto;
+            transform: translateY(100%);
+            transition: 0.5s;
+            .header {
+              color: #fff;
+            }
+          }
+          &.active {
+            .message-box {
+              transform: translateY(0);
+            }
+          }
         }
       }
       .chart-wrapper-outside {

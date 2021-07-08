@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const projectSchema = new mongoose.Schema({
   name: String,
+  short_description: String,
   description: String,
   start_date: String,
   end_date: String,

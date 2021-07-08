@@ -78,7 +78,7 @@ export default function Home() {
                   {project.name}
                 </Header>
                 <div className="project-description">
-                  <EditorView description={project.description} />
+                  <p>{project.short_description}</p>
                 </div>
               </div>
               <div className="card-right">

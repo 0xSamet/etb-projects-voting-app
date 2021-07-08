@@ -15,6 +15,8 @@ import axios from "axios";
 import EditorView from "../../components/EditorView";
 import randomColor from "randomcolor";
 import { useAlert } from "react-alert";
+import { useSelector } from "react-redux";
+import clsx from "clsx";
 
 export default function ProjectDetail() {
   const router = useRouter();
@@ -40,6 +42,7 @@ export default function ProjectDetail() {
     pieChartData: { ...emptyPieChartData },
     selectedParticipant: -1,
   });
+  const state = useSelector((state) => state);
 
   useEffect(() => {
     if (router.query.projectId) {
@@ -90,6 +93,8 @@ export default function ProjectDetail() {
       getProject();
     }
   }, [router.query.projectId]);
+
+  const pieChartMemo = useMemo(() => <Pie data={project.pieChartData} />, []);
 
   return (
     <div className="project-page">
@@ -155,11 +160,19 @@ export default function ProjectDetail() {
             <div className="submit-vote-row">
               <Button primary>Submit</Button>
             </div>
+            <div
+              className={clsx({
+                "vote-need-login-wrapper": true,
+                active: !state.user.loggedIn,
+              })}
+            >
+              <div className="message-box">
+                <Header as="h3">You need the connect wallet to vote</Header>
+              </div>
+            </div>
           </div>
           <div className="chart-wrapper-outside">
-            <div className="chart-wrapper-inside">
-              <Pie data={project.pieChartData} />
-            </div>
+            <div className="chart-wrapper-inside">{pieChartMemo}</div>
           </div>
         </>
       )}

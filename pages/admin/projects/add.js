@@ -27,6 +27,7 @@ export default function AdminAddProject() {
   const [projectInputs, setProjectInputs] = useState({
     name: "",
     description: EditorState.createEmpty(),
+    short_description: "",
     sort_order: 0,
     start_date: new Date(),
     end_date: new Date(),
@@ -132,7 +133,16 @@ export default function AdminAddProject() {
               />
             </Form.Field>
             <Form.Field>
-              <label>Project Description</label>
+              <label>Project Short Description (Homepage)</label>
+              <textarea
+                spellCheck={false}
+                name="short_description"
+                onChange={simpleInputChange}
+                value={projectInputs.short_description}
+              ></textarea>
+            </Form.Field>
+            <Form.Field>
+              <label>Project Description (Detail Page)</label>
               <Editor
                 editorState={projectInputs.description}
                 onChange={(editorState) => {
