@@ -5,20 +5,16 @@ import { useAlert } from "react-alert";
 import { useDispatch, useSelector } from "react-redux";
 import { userLoginSuccess, userLogout } from "../store";
 import { useState, useEffect } from "react";
-import {
-  signTypedData_v4,
-  recoverTypedSignature_v4,
-  recoverPersonalSignature,
-} from "eth-sig-util";
+import { recoverPersonalSignature } from "eth-sig-util";
 import { convertUtf8ToHex } from "@walletconnect/utils";
-import { useWalletConnect } from "../lib/custom-hook";
+import { useWalletConnectContext } from "../lib/walletConnectContext";
 
 export default function Header() {
   //const alert = useAlert();
   const dispatch = useDispatch();
   const state = useSelector((state) => state);
   const [web3, setWeb3] = useState(null);
-  const walletConnect = useWalletConnect();
+  const { walletConnect } = useWalletConnectContext();
 
   const connectMetamask = async () => {
     try {
@@ -46,6 +42,8 @@ export default function Header() {
       if (!walletConnect.connected) {
         // create new session
         await walletConnect.createSession();
+      } else {
+        console.log("connected", walletConnect);
       }
     } catch (e) {
       // alert.error(e);
@@ -53,64 +51,14 @@ export default function Header() {
     }
   };
 
-  useEffect(async () => {
-    // Check if connection is already established
-
-    // console.log(connector.createSession());
-    // if (!connector.connected) {
-    //   // create new session
-    //   await connector.createSession();
-    // }
-
-    // Subscribe to connection events
-    walletConnect.on("connect", (error, payload) => {
-      if (error) {
-        throw error;
-      }
-
-      // Get provided accounts and chainId
-      const { accounts, chainId } = payload.params[0];
-      console.log({ accounts, chainId, payload });
-      dispatch(
-        userLoginSuccess({
-          wallet: accounts[0],
-          connectedWith: "wallet-connect",
-        })
-      );
-    });
-
-    walletConnect.on("session_update", (error, payload) => {
-      if (error) {
-        throw error;
-      }
-
-      // Get updated accounts and chainId
-      const { accounts, chainId } = payload.params[0];
-
-      dispatch(
-        userLoginSuccess({
-          wallet: accounts[0],
-          connectedWith: "wallet-connect",
-        })
-      );
-    });
-
-    walletConnect.on("disconnect", (error, payload) => {
-      if (error) {
-        throw error;
-      }
-
-      // Delete connector
-      dispatch(userLogout());
-    });
-  }, []);
-
   const logout = async () => {
     if (walletConnect.connected) {
       await walletConnect.killSession();
     }
     return dispatch(userLogout());
   };
+
+  // console.log("header", walletConnect);
 
   const signMessage = async () => {
     if (!state.user.loggedIn) {
@@ -131,11 +79,6 @@ export default function Header() {
     walletConnect // Sign personal message
       .signPersonalMessage(msgParams)
       .then((result) => {
-        // Returns signature.
-        console.log(result);
-
-        console.log("Trying to recover ...");
-
         const a = recoverPersonalSignature({
           data: convertUtf8ToHex(message),
           sig: result,

@@ -3,7 +3,9 @@ import {
   Dimmer,
   Divider,
   Header,
+  Icon,
   Loader,
+  Modal,
   Radio,
   Segment,
 } from "semantic-ui-react";
@@ -15,8 +17,11 @@ import axios from "axios";
 import EditorView from "../../components/EditorView";
 import randomColor from "randomcolor";
 import { useAlert } from "react-alert";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import clsx from "clsx";
+import { useWalletConnectContext } from "../../lib/walletConnectContext";
+import { convertUtf8ToHex } from "@walletconnect/utils";
+import { userLoginSuccess, userLogout } from "../../store";
 
 export default function ProjectDetail() {
   const router = useRouter();
@@ -42,7 +47,64 @@ export default function ProjectDetail() {
     pieChartData: { ...emptyPieChartData },
     selectedParticipant: -1,
   });
+  const [modals, setModals] = useState({
+    1: {
+      confirmed: false,
+      show: false,
+    },
+    2: {
+      confirmed: false,
+      show: false,
+    },
+  });
   const state = useSelector((state) => state);
+  const { walletConnect } = useWalletConnectContext();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    walletConnect.on("connect", (error, payload) => {
+      if (error) {
+        return console.log(error.message);
+      }
+      const { accounts } = payload.params[0];
+      return dispatch(
+        userLoginSuccess({
+          wallet: accounts[0],
+          connectedWith: "wallet-connect",
+        })
+      );
+    });
+
+    walletConnect.on("session_update", (error, payload) => {
+      if (error) {
+        return console.log(error.message);
+      }
+      const { accounts } = payload.params[0];
+      return dispatch(
+        userLoginSuccess({
+          wallet: accounts[0],
+          connectedWith: "wallet-connect",
+        })
+      );
+    });
+
+    walletConnect.on("disconnect", (error, payload) => {
+      if (error) {
+        return console.log(error.message);
+      }
+      return dispatch(userLogout());
+    });
+
+    if (walletConnect.connected) {
+      const { accounts } = walletConnect;
+      return dispatch(
+        userLoginSuccess({
+          wallet: accounts[0],
+          connectedWith: "wallet-connect",
+        })
+      );
+    }
+  }, []);
 
   useEffect(() => {
     if (router.query.projectId) {
@@ -94,7 +156,103 @@ export default function ProjectDetail() {
     }
   }, [router.query.projectId]);
 
-  const pieChartMemo = useMemo(() => <Pie data={project.pieChartData} />, []);
+  const walletConnectSign = async () => {
+    if (!state.user.loggedIn) {
+      await walletConnect.killSession();
+      return dispatch(userLogout());
+    }
+
+    // Draft Message Parameters
+    const message = JSON.stringify({
+      message: "voted",
+    });
+
+    const msgParams = [
+      convertUtf8ToHex(message), // Required
+      state.user.wallet, // Required
+    ];
+
+    walletConnect // Sign personal message
+      .signPersonalMessage(msgParams)
+      .then((result) => {
+        // Returns signature.
+        console.log(result);
+
+        const a = recoverPersonalSignature({
+          data: convertUtf8ToHex(message),
+          sig: result,
+        });
+        console.log("recovered", a, state.user.wallet);
+      })
+      .catch((error) => {
+        // Error returned when rejected
+        console.error(error);
+      });
+  };
+
+  useEffect(() => {
+    if (modals[1].confirmed) {
+      setModals({
+        ...modals,
+        1: {
+          show: false,
+          confirmed: true,
+        },
+        2: {
+          show: true,
+          confirmed: false,
+        },
+      });
+
+      walletConnectSign();
+    }
+  }, [modals[1].confirmed]);
+
+  const voteProject = async () => {
+    //find participant id by index
+    let participantId;
+    if (project.selectedParticipant || project.selectedParticipant === 0) {
+      participantId = project.participants[project.selectedParticipant]._id;
+    } else {
+      return alert.error("Please select a participant!");
+    }
+
+    //confirm modals first
+    if (!modals[1].confirmed && !modals[2].confirmed) {
+      return setModals({
+        ...modals,
+        1: {
+          show: true,
+        },
+      });
+    }
+
+    if (router.query && router.query.projectId) {
+      try {
+        const response = await axios.post(
+          `/api/projects/${router.query.projectId}/vote`,
+          {
+            participantId,
+          }
+        );
+
+        if (response && response.data && response.data.success) {
+          alert.success("Success !");
+        }
+      } catch (e) {
+        if (e.response && e.response.data && e.response.data.message) {
+          return alert.error(e.response.data.message);
+        }
+        return alert.error(e.message);
+      }
+    } else {
+      router.push("/");
+    }
+  };
+
+  const pieChartMemo = useMemo(() => <Pie data={project.pieChartData} />, [
+    project.participants,
+  ]);
 
   return (
     <div className="project-page">
@@ -115,7 +273,7 @@ export default function ProjectDetail() {
           </div>
           <div className="options-wrapper">
             <Header as="h3" className="options-title">
-              Vote For Project
+              Vote This Project
             </Header>
             {project.participants.map((p, index) => {
               return (
@@ -158,7 +316,9 @@ export default function ProjectDetail() {
               );
             })}
             <div className="submit-vote-row">
-              <Button primary>Submit</Button>
+              <Button onClick={voteProject} primary>
+                Submit
+              </Button>
             </div>
             <div
               className={clsx({
@@ -174,6 +334,79 @@ export default function ProjectDetail() {
           <div className="chart-wrapper-outside">
             <div className="chart-wrapper-inside">{pieChartMemo}</div>
           </div>
+          <Modal
+            open={modals[1].show}
+            onClose={() =>
+              setModals({
+                1: {
+                  show: false,
+                  confirmed: false,
+                },
+                2: {
+                  show: false,
+                  confirmed: false,
+                },
+              })
+            }
+          >
+            <Modal.Header>You need the sign a vote</Modal.Header>
+            <Modal.Content image>
+              <div className="image">
+                <Icon name="right arrow" />
+              </div>
+              <Modal.Description>
+                <p>
+                  After Clicking a Proceed button Check Your Wallet for
+                  signature
+                </p>
+              </Modal.Description>
+            </Modal.Content>
+            <Modal.Actions>
+              <Button
+                onClick={() =>
+                  setModals({
+                    ...modals,
+                    1: { ...modals[1], confirmed: true },
+                  })
+                }
+                primary
+              >
+                Proceed <Icon name="right chevron" />
+              </Button>
+            </Modal.Actions>
+          </Modal>
+          <Modal
+            open={modals[2].show}
+            onClose={() =>
+              setModals({
+                1: {
+                  show: false,
+                  confirmed: false,
+                },
+                2: {
+                  show: false,
+                  confirmed: false,
+                },
+              })
+            }
+          >
+            <Modal.Header>Waiting to sign</Modal.Header>
+            <Modal.Content image>
+              <div
+                style={{
+                  position: "relative",
+                  minHeight: 100,
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <Dimmer active inverted>
+                  <Loader size="medium"></Loader>
+                </Dimmer>
+              </div>
+            </Modal.Content>
+          </Modal>
         </>
       )}
     </div>
