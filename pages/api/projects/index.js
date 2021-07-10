@@ -7,8 +7,8 @@ import Project from "../../../db/models/Project";
 
 const addProjectSchema = Joi.object({
   name: Joi.string().required().trim(),
-  short_description: Joi.string().required().trim(),
-  description: Joi.string().required().trim().allow(""),
+  short_description: Joi.string().required().allow(""),
+  description: Joi.string().required().trim(),
   start_date: Joi.string().trim().required(),
   end_date: Joi.string().trim().required(),
   sort_order: Joi.number().default(0),

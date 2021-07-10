@@ -14,6 +14,9 @@ import axios from "axios";
 import { useAlert } from "react-alert";
 import EditorView from "../components/EditorView";
 import { convertFromRaw, Editor, EditorState } from "draft-js";
+import { userLoginSuccess, userLogout } from "../store";
+import { useWalletConnectContext } from "../lib/walletConnectContext";
+import { useDispatch } from "react-redux";
 
 export default function Home() {
   const [projects, setProjects] = useState({
@@ -21,6 +24,53 @@ export default function Home() {
     data: [],
   });
   const alert = useAlert();
+  const { walletConnect } = useWalletConnectContext();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    walletConnect.on("connect", (error, payload) => {
+      if (error) {
+        return console.log(error.message);
+      }
+      const { accounts } = payload.params[0];
+      return dispatch(
+        userLoginSuccess({
+          wallet: accounts[0],
+          connectedWith: "wallet-connect",
+        })
+      );
+    });
+
+    walletConnect.on("session_update", (error, payload) => {
+      if (error) {
+        return console.log(error.message);
+      }
+      const { accounts } = payload.params[0];
+      return dispatch(
+        userLoginSuccess({
+          wallet: accounts[0],
+          connectedWith: "wallet-connect",
+        })
+      );
+    });
+
+    walletConnect.on("disconnect", (error, payload) => {
+      if (error) {
+        return console.log(error.message);
+      }
+      return dispatch(userLogout());
+    });
+
+    if (walletConnect.connected) {
+      const { accounts } = walletConnect;
+      return dispatch(
+        userLoginSuccess({
+          wallet: accounts[0],
+          connectedWith: "wallet-connect",
+        })
+      );
+    }
+  }, []);
 
   useEffect(() => {
     getProjects();

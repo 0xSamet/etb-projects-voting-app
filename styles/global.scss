@@ -86,6 +86,11 @@ a {
       align-items: center;
       padding: 5px;
       position: relative;
+      transform: translateY(calc(-100% - 10px));
+      transition: transform 0.5s ease-in-out;
+      &.show {
+        transform: translateY(0);
+      }
       .title,
       .tokens {
         z-index: 1;
@@ -247,6 +252,20 @@ a {
       .options-wrapper {
         padding: 75px 630px 0 230px;
         position: relative;
+        &.need-login-active {
+          .vote-need-login-wrapper {
+            .message-box {
+              transform: translateY(0);
+            }
+          }
+          .option,
+          .options-title {
+            filter: blur(2px);
+          }
+          .submit-vote-row {
+            filter: blur(2px);
+          }
+        }
         .option {
           margin: 15px 0px;
 
@@ -332,9 +351,61 @@ a {
               color: #fff;
             }
           }
-          &.active {
-            .message-box {
-              transform: translateY(0);
+        }
+      }
+      .last-votes {
+        padding: 50px 630px 0 230px;
+        .feed {
+          max-height: 300px;
+          overflow-x: hidden;
+          overflow-y: auto;
+          padding-top: 10px;
+          display: flex;
+          flex-direction: column-reverse;
+          &::-webkit-scrollbar {
+            width: 5px;
+          }
+          &::-webkit-scrollbar {
+            width: 5px;
+          }
+          .event {
+            max-height: 80px;
+            .content {
+              min-height: auto;
+            }
+            .divider {
+              margin: 3px 0px;
+            }
+            .label {
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              img {
+                transform: translateY(-5px);
+              }
+            }
+          }
+          .feed-wallet {
+            color: #4183c4;
+          }
+        }
+        .last-votes-title {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          box-shadow: 0px 1px 3px -1px rgb(143 143 143 / 20%);
+          .refresh-button {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 8px;
+            line-height: normal;
+            &.refresh {
+              i.refresh {
+                animation: button-spin 0.6s linear;
+                animation-iteration-count: infinite;
+              }
             }
           }
         }

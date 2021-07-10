@@ -14,7 +14,17 @@ const projectSchema = new mongoose.Schema({
       voteCount: Number,
     },
   ],
-  alreadyVoted: [String],
+  alreadyVoted: [
+    {
+      wallet: String,
+      tokenHave: Number,
+      vote_date: String,
+      participantId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Project.participants",
+      },
+    },
+  ],
 });
 
 export default mongoose.models.Project ||

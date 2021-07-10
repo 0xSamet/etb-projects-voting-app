@@ -2,6 +2,7 @@ import {
   Button,
   Dimmer,
   Divider,
+  Feed,
   Header,
   Icon,
   Loader,
@@ -22,6 +23,9 @@ import clsx from "clsx";
 import { useWalletConnectContext } from "../../lib/walletConnectContext";
 import { convertUtf8ToHex } from "@walletconnect/utils";
 import { userLoginSuccess, userLogout } from "../../store";
+import { recoverPersonalSignature } from "eth-sig-util";
+import { useSpring, useSprings, animated } from "react-spring";
+import moment from "moment";
 
 export default function ProjectDetail() {
   const router = useRouter();
@@ -45,7 +49,12 @@ export default function ProjectDetail() {
     end_date: new Date(),
     participants: [],
     pieChartData: { ...emptyPieChartData },
-    selectedParticipant: -1,
+    selectedParticipant: null,
+    alreadyVoted: [],
+    walletConnectSign: {
+      signature: "",
+      signedMessage: "",
+    },
   });
   const [modals, setModals] = useState({
     1: {
@@ -60,6 +69,18 @@ export default function ProjectDetail() {
   const state = useSelector((state) => state);
   const { walletConnect } = useWalletConnectContext();
   const dispatch = useDispatch();
+
+  const lastVoteSprings = useSprings(
+    project.alreadyVoted.length,
+    project.alreadyVoted.map((person) => ({
+      from: { opacity: 0, x: 100 },
+      to: { opacity: 1, x: 0 },
+      onStart: function (a) {
+        const feedEl = document.querySelector(".last-votes .feed");
+        feedEl.scrollTop = -feedEl.scrollHeight;
+      },
+    }))
+  );
 
   useEffect(() => {
     walletConnect.on("connect", (error, payload) => {
@@ -79,6 +100,8 @@ export default function ProjectDetail() {
       if (error) {
         return console.log(error.message);
       }
+
+      console.log("session_updated", payload);
       const { accounts } = payload.params[0];
       return dispatch(
         userLoginSuccess({
@@ -139,6 +162,7 @@ export default function ProjectDetail() {
             });
 
             setProject({
+              ...project,
               ...response.data.project,
               loading: false,
               participants: participantsColorPropAdded,
@@ -163,12 +187,13 @@ export default function ProjectDetail() {
     }
 
     // Draft Message Parameters
-    const message = JSON.stringify({
-      message: "voted",
+    const messageToSign = JSON.stringify({
+      projectId: router.query.projectId,
+      participantId: project.participants[project.selectedParticipant]._id,
     });
 
     const msgParams = [
-      convertUtf8ToHex(message), // Required
+      convertUtf8ToHex(messageToSign), // Required
       state.user.wallet, // Required
     ];
 
@@ -178,19 +203,49 @@ export default function ProjectDetail() {
         // Returns signature.
         console.log(result);
 
-        const a = recoverPersonalSignature({
-          data: convertUtf8ToHex(message),
+        const recovered = recoverPersonalSignature({
+          data: convertUtf8ToHex(messageToSign),
           sig: result,
         });
-        console.log("recovered", a, state.user.wallet);
+
+        if (
+          recovered.toLocaleLowerCase() ===
+          state.user.wallet.toLocaleLowerCase()
+        ) {
+          return setProject({
+            ...project,
+            walletConnectSign: {
+              ...project.walletConnectSign,
+              signature: result,
+              signedMessage: messageToSign,
+            },
+          });
+        }
+
+        return alert.error("Sign Failed");
       })
       .catch((error) => {
         // Error returned when rejected
-        console.error(error);
+        setModals({
+          ...modals,
+          1: {
+            show: false,
+            confirmed: false,
+          },
+          2: {
+            show: false,
+            confirmed: false,
+          },
+        });
+        if (error.message == "User canceled") {
+          return alert.error("Sign Canceled!");
+        } else {
+          console.error(error);
+        }
       });
   };
 
-  useEffect(() => {
+  useEffect(async () => {
     if (modals[1].confirmed) {
       setModals({
         ...modals,
@@ -204,13 +259,99 @@ export default function ProjectDetail() {
         },
       });
 
-      walletConnectSign();
+      await walletConnectSign();
     }
   }, [modals[1].confirmed]);
 
-  const voteProject = async () => {
+  useEffect(async () => {
+    if (project.walletConnectSign.signature) {
+      if (router.query && router.query.projectId) {
+        try {
+          const response = await axios.post(
+            `/api/projects/${router.query.projectId}/vote`,
+            {
+              signature: project.walletConnectSign.signature,
+              signedMessage: project.walletConnectSign.signedMessage,
+              wallet: state.user.wallet,
+            }
+          );
+
+          if (response && response.data && response.data.project) {
+            const participantsColorPropAdded = response.data.project.participants.map(
+              (p) => {
+                const borderColor = randomColor({ format: "rgba", alpha: 1 });
+                const bgColor =
+                  borderColor.substr(0, borderColor.length - 2) + "0.2)";
+                // const borderColor =
+                return {
+                  ...p,
+                  color: {
+                    bg: bgColor,
+                    border: borderColor,
+                  },
+                };
+              }
+            );
+
+            const newPieChartData = { ...emptyPieChartData };
+            participantsColorPropAdded.forEach((p) => {
+              newPieChartData.labels.push(p.author);
+              newPieChartData.datasets[0].data.push(p.voteCount);
+              newPieChartData.datasets[0].backgroundColor.push(p.color.bg);
+              newPieChartData.datasets[0].borderColor.push(p.color.border);
+            });
+
+            setProject({
+              ...project,
+              ...response.data.project,
+              loading: false,
+              participants: participantsColorPropAdded,
+              pieChartData: newPieChartData,
+            });
+            setModals({
+              ...modals,
+              1: {
+                show: false,
+                confirmed: true,
+              },
+              2: {
+                show: false,
+                confirmed: true,
+              },
+            });
+          }
+        } catch (e) {
+          setProject({
+            ...project,
+            walletConnectSign: {
+              ...project.walletConnectSign,
+              signature: "",
+              signedMessage: "",
+            },
+          });
+          setModals({
+            ...modals,
+            1: {
+              show: false,
+              confirmed: false,
+            },
+            2: { show: false, confirmed: false },
+          });
+          if (e.response && e.response.data && e.response.data.message) {
+            return alert.error(e.response.data.message);
+          }
+          return alert.error(e.message);
+        }
+      } else {
+        router.push("/");
+      }
+    }
+  }, [project.walletConnectSign.signature]);
+
+  const onClickVoteBtn = async () => {
     //find participant id by index
     let participantId;
+
     if (project.selectedParticipant || project.selectedParticipant === 0) {
       participantId = project.participants[project.selectedParticipant]._id;
     } else {
@@ -223,30 +364,13 @@ export default function ProjectDetail() {
         ...modals,
         1: {
           show: true,
+          confirmed: false,
+        },
+        2: {
+          show: false,
+          confirmed: false,
         },
       });
-    }
-
-    if (router.query && router.query.projectId) {
-      try {
-        const response = await axios.post(
-          `/api/projects/${router.query.projectId}/vote`,
-          {
-            participantId,
-          }
-        );
-
-        if (response && response.data && response.data.success) {
-          alert.success("Success !");
-        }
-      } catch (e) {
-        if (e.response && e.response.data && e.response.data.message) {
-          return alert.error(e.response.data.message);
-        }
-        return alert.error(e.message);
-      }
-    } else {
-      router.push("/");
     }
   };
 
@@ -271,7 +395,12 @@ export default function ProjectDetail() {
               <EditorView description={project.description} />
             </div>
           </div>
-          <div className="options-wrapper">
+          <div
+            className={clsx({
+              "options-wrapper": true,
+              "need-login-active": !state.user.loggedIn,
+            })}
+          >
             <Header as="h3" className="options-title">
               Vote This Project
             </Header>
@@ -316,20 +445,65 @@ export default function ProjectDetail() {
               );
             })}
             <div className="submit-vote-row">
-              <Button onClick={voteProject} primary>
+              <Button onClick={onClickVoteBtn} primary>
                 Submit
               </Button>
             </div>
-            <div
-              className={clsx({
-                "vote-need-login-wrapper": true,
-                active: !state.user.loggedIn,
-              })}
-            >
+            <div className="vote-need-login-wrapper">
               <div className="message-box">
                 <Header as="h3">You need the connect wallet to vote</Header>
               </div>
             </div>
+          </div>
+          <div className="last-votes">
+            <Header as="h3" className="last-votes-title">
+              Last Votes
+              <Button icon className="refresh-button">
+                <Icon size="tiny" name="refresh" />
+              </Button>
+            </Header>
+            <Feed>
+              {lastVoteSprings.map((styles, i, b) => {
+                const voted = project.alreadyVoted[i];
+                const findParticipant = project.participants.find(
+                  (p) => p._id === voted.participantId
+                );
+                const dateFormat = moment(Number(voted.vote_date)).fromNow();
+
+                return (
+                  <animated.div
+                    scrollTop={0}
+                    className="ui event"
+                    style={styles}
+                    key={"vote-key-" + i}
+                  >
+                    <Feed.Label>
+                      <img src="https://react.semantic-ui.com/images/avatar/small/elliot.jpg" />
+                    </Feed.Label>
+                    <Feed.Content>
+                      <Feed.Date>{dateFormat}</Feed.Date>
+                      <span className="feed-wallet">{voted.wallet}</span>
+                      {`  Voted For ${findParticipant.author}`}
+                      <Divider />
+                      <p>Have 2,000 ETB Tokens</p>
+                    </Feed.Content>
+                  </animated.div>
+                );
+              })}
+            </Feed>
+            <button
+              onClick={() =>
+                setProject({
+                  ...project,
+                  alreadyVoted: [
+                    project.alreadyVoted.length,
+                    ...project.alreadyVoted,
+                  ],
+                })
+              }
+            >
+              push
+            </button>
           </div>
           <div className="chart-wrapper-outside">
             <div className="chart-wrapper-inside">{pieChartMemo}</div>
@@ -375,21 +549,7 @@ export default function ProjectDetail() {
               </Button>
             </Modal.Actions>
           </Modal>
-          <Modal
-            open={modals[2].show}
-            onClose={() =>
-              setModals({
-                1: {
-                  show: false,
-                  confirmed: false,
-                },
-                2: {
-                  show: false,
-                  confirmed: false,
-                },
-              })
-            }
-          >
+          <Modal open={modals[2].show}>
             <Modal.Header>Waiting to sign</Modal.Header>
             <Modal.Content image>
               <div

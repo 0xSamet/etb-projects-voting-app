@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { recoverPersonalSignature } from "eth-sig-util";
 import { convertUtf8ToHex } from "@walletconnect/utils";
 import { useWalletConnectContext } from "../lib/walletConnectContext";
+import clsx from "clsx";
 
 export default function Header() {
   //const alert = useAlert();
@@ -94,7 +95,12 @@ export default function Header() {
   return (
     <>
       <div className="header-top">
-        <span className="token-holding-wrapper">
+        <span
+          className={clsx({
+            "token-holding-wrapper": true,
+            show: state.user.loggedIn,
+          })}
+        >
           <span className="title">ETB TOKEN HAVE</span>
           <span className="tokens">0</span>
         </span>

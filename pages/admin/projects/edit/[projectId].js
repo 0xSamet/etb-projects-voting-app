@@ -117,9 +117,9 @@ export default function AdminAddProject() {
         }
       } catch (e) {
         if (e.response && e.response.data && e.response.data.message) {
-          alert.error(e.response.data.message);
+          return alert.error(e.response.data.message);
         }
-        alert.error(e.message);
+        return alert.error(e.message);
       }
     } else {
       router.push("/admin");
