@@ -93,13 +93,13 @@ export default function Home() {
         });
       }
     } catch (e) {
-      alert.error(e.message);
       if (e.response && e.response.data && e.response.data.message) {
         setProjects({
           loading: false,
         });
-        alert.error(e.response.data.message);
+        return alert.error(e.response.data.message);
       }
+      return alert.error(e.message);
     }
   };
 

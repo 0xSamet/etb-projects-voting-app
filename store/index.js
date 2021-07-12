@@ -10,6 +10,7 @@ const initialState = {
     loggedIn: false,
     wallet: "",
     connectedWith: "",
+    tokenHave: 0,
   },
 };
 
@@ -18,6 +19,8 @@ const ADMIN_LOGOUT = "ADMIN_LOGOUT";
 
 const USER_LOGIN_SUCCESS = "USER_LOGIN_SUCCESS";
 const USER_LOGOUT = "USER_LOGOUT";
+
+const UPDATE_USER_TOKENHAVE = "UPDATE_USER_TOKENHAVE";
 
 export const adminLoginSuccess = (username) => ({
   type: ADMIN_LOGIN_SUCCESS,
@@ -34,6 +37,13 @@ export const userLoginSuccess = (payload) => ({
   },
 });
 
+export const updateUserTokenHave = (payload) => ({
+  type: UPDATE_USER_TOKENHAVE,
+  payload: {
+    tokenHave: payload.tokenHave,
+  },
+});
+
 export const adminLogout = () => ({
   type: ADMIN_LOGOUT,
 });
@@ -47,7 +57,7 @@ const reducer = (state = initialState, action) => {
   switch (action.type) {
     case HYDRATE:
       return { ...state, ...action.payload };
-    case "ADMIN_LOGIN_SUCCESS":
+    case ADMIN_LOGIN_SUCCESS:
       return {
         ...state,
         admin: {
@@ -56,7 +66,7 @@ const reducer = (state = initialState, action) => {
           username: action.payload.username,
         },
       };
-    case "ADMIN_LOGOUT":
+    case ADMIN_LOGOUT:
       return {
         ...state,
         admin: {
@@ -65,7 +75,7 @@ const reducer = (state = initialState, action) => {
           username: "",
         },
       };
-    case "USER_LOGIN_SUCCESS":
+    case USER_LOGIN_SUCCESS:
       return {
         ...state,
         user: {
@@ -75,13 +85,21 @@ const reducer = (state = initialState, action) => {
           connectedWith: action.payload.connectedWith,
         },
       };
-    case "USER_LOGOUT":
+    case USER_LOGOUT:
       return {
         ...state,
         user: {
           ...state.user,
           loggedIn: false,
           wallet: "",
+        },
+      };
+    case UPDATE_USER_TOKENHAVE:
+      return {
+        ...state,
+        user: {
+          ...state.user,
+          tokenHave: action.payload.tokenHave,
         },
       };
     default:

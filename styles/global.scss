@@ -86,7 +86,7 @@ a {
       align-items: center;
       padding: 5px;
       position: relative;
-      transform: translateY(calc(-100% - 10px));
+      transform: translateY(calc(-100% - 25px));
       transition: transform 0.5s ease-in-out;
       &.show {
         transform: translateY(0);
@@ -101,6 +101,33 @@ a {
       }
       .tokens {
         font-weight: 700;
+      }
+      .refresh-btn {
+        position: absolute;
+        bottom: 0;
+        z-index: 1;
+        font-size: 30px;
+        transform: translateY(20px) translateX(-50%);
+        left: 50%;
+        background: #333;
+        padding: 6px;
+        border-radius: 100%;
+
+        i {
+          margin: 0;
+          line-height: normal;
+          height: auto;
+          display: block;
+          width: auto;
+          animation: button-spin 0.6s linear;
+          animation-iteration-count: infinite;
+          animation-play-state: paused;
+        }
+        &.loading {
+          i {
+            animation-play-state: running;
+          }
+        }
       }
       &::after {
         content: "";
@@ -313,6 +340,19 @@ a {
               right: 15px;
 
               z-index: 0;
+            }
+            .option-checked {
+              position: absolute;
+              top: 50%;
+              transform: translateY(-50%);
+              right: 70px;
+              z-index: 0;
+              width: 22px;
+              height: 22px;
+              svg {
+                width: 100%;
+                height: 100%;
+              }
             }
           }
         }

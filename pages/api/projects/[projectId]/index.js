@@ -40,7 +40,6 @@ export default async (req, res) => {
       const project = await Project.findOne({
         _id: req.query.projectId,
       }).select({
-        alreadyVoted: 0,
         __v: 0,
       });
 

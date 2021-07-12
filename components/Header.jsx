@@ -3,12 +3,11 @@ import { Button, Icon, Popup } from "semantic-ui-react";
 import getBlockChain from "../lib/ethereum";
 import { useAlert } from "react-alert";
 import { useDispatch, useSelector } from "react-redux";
-import { userLoginSuccess, userLogout } from "../store";
+import { userLoginSuccess, userLogout, updateUserTokenHave } from "../store";
 import { useState, useEffect } from "react";
-import { recoverPersonalSignature } from "eth-sig-util";
-import { convertUtf8ToHex } from "@walletconnect/utils";
 import { useWalletConnectContext } from "../lib/walletConnectContext";
 import clsx from "clsx";
+import axios from "axios";
 
 export default function Header() {
   //const alert = useAlert();
@@ -16,11 +15,13 @@ export default function Header() {
   const state = useSelector((state) => state);
   const [web3, setWeb3] = useState(null);
   const { walletConnect } = useWalletConnectContext();
+  const alert = useAlert();
+  const [updateTokenHaveLoading, setUpdateTokenHaveLoading] = useState(false);
 
   const connectMetamask = async () => {
     try {
       const response = await getBlockChain();
-      console.log(response);
+      //console.log(response);
       if (response && response.address) {
         setWeb3(response.web3);
         dispatch(
@@ -40,17 +41,48 @@ export default function Header() {
   const connectWalletConnect = async () => {
     try {
       //await walletConnect.killSession();
-      if (!walletConnect.connected) {
+      if (walletConnect.connected) {
         // create new session
-        await walletConnect.createSession();
-      } else {
         console.log("connected", walletConnect);
+      } else {
+        await walletConnect.createSession();
       }
     } catch (e) {
       // alert.error(e);
       console.log(e);
     }
   };
+
+  const updateTokenHave = async () => {
+    if (!updateTokenHaveLoading) {
+      setUpdateTokenHaveLoading(true);
+      try {
+        const response = await axios(
+          `/api/token/balanceOf/${state.user.wallet.toLowerCase()}`
+        );
+
+        if (response && response.data && response.data.tokenHave) {
+          setUpdateTokenHaveLoading(false);
+          dispatch(
+            updateUserTokenHave({
+              tokenHave: response.data.tokenHave,
+            })
+          );
+        }
+      } catch (e) {
+        if (e.response && e.response.data && e.response.data.message) {
+          return alert.error(e.response.data.message);
+        }
+        return alert.error(e.message);
+      }
+    }
+  };
+
+  useEffect(async () => {
+    if (state.user.loggedIn) {
+      updateTokenHave();
+    }
+  }, [state.user.loggedIn]);
 
   const logout = async () => {
     if (walletConnect.connected) {
@@ -60,37 +92,6 @@ export default function Header() {
   };
 
   // console.log("header", walletConnect);
-
-  const signMessage = async () => {
-    if (!state.user.loggedIn) {
-      await walletConnect.killSession();
-      return dispatch(userLogout());
-    }
-
-    // Draft Message Parameters
-    const message = JSON.stringify({
-      message: "voted",
-    });
-
-    const msgParams = [
-      convertUtf8ToHex(message), // Required
-      state.user.wallet, // Required
-    ];
-
-    walletConnect // Sign personal message
-      .signPersonalMessage(msgParams)
-      .then((result) => {
-        const a = recoverPersonalSignature({
-          data: convertUtf8ToHex(message),
-          sig: result,
-        });
-        console.log("recovered", a, state.user.wallet);
-      })
-      .catch((error) => {
-        // Error returned when rejected
-        console.error(error);
-      });
-  };
 
   return (
     <>
@@ -102,7 +103,16 @@ export default function Header() {
           })}
         >
           <span className="title">ETB TOKEN HAVE</span>
-          <span className="tokens">0</span>
+          <span className="tokens">{state.user.tokenHave}</span>
+          <span
+            className={clsx({
+              "refresh-btn": true,
+              loading: updateTokenHaveLoading,
+            })}
+            onClick={updateTokenHave}
+          >
+            <Icon size="tiny" name="refresh" />
+          </span>
         </span>
       </div>
       <header>
@@ -140,9 +150,6 @@ export default function Header() {
               >
                 <Icon name="sign-out" />
                 Logout
-              </Button>
-              <Button onClick={signMessage} loading={false} primary>
-                Sign
               </Button>
             </>
           ) : (
