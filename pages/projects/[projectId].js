@@ -61,7 +61,6 @@ export default function ProjectDetail() {
       signature: "",
       signedMessage: "",
     },
-    isUserAlreadyVoteThisProject: false,
   });
   const [modals, setModals] = useState({
     1: {
@@ -73,6 +72,14 @@ export default function ProjectDetail() {
       show: false,
     },
   });
+  const [
+    isUserAlreadyVoteThisProject,
+    setIsUserAlreadyVoteThisProject,
+  ] = useState(false);
+  const [alreadyVotedLoading, setAlreadyVotedLoading] = useState(false);
+  const [participantsColorPropAdded, setParticipantsColorPropAdded] = useState(
+    false
+  );
   const state = useSelector((state) => state);
   const { walletConnect } = useWalletConnectContext();
   const dispatch = useDispatch();
@@ -102,7 +109,7 @@ export default function ProjectDetail() {
     }
   }, []);
 
-  useEffect(() => {
+  const checkUserAlreadyVoted = () => {
     if (state.user.loggedIn && project) {
       let isUserAlreadyVoteThisProject = false;
       if (state.user.loggedIn) {
@@ -112,65 +119,155 @@ export default function ProjectDetail() {
         if (tryFind) {
           isUserAlreadyVoteThisProject = tryFind.participantId;
         }
-        setProject({ ...project, isUserAlreadyVoteThisProject });
+        setIsUserAlreadyVoteThisProject(isUserAlreadyVoteThisProject);
       }
     } else {
-      setProject({ ...project, isUserAlreadyVoteThisProject: false });
+      setIsUserAlreadyVoteThisProject(false);
     }
-  }, [state.user.loggedIn]);
+  };
 
-  useEffect(() => {
+  const refreshAlreadyVoted = async () => {
     if (router.query.projectId) {
-      const getProject = async () => {
-        try {
-          const response = await axios(
-            `/api/projects/${router.query.projectId}`
-          );
-          if (response && response.data && response.data.project) {
-            const participantsColorPropAdded = response.data.project.participants.map(
-              (p) => {
-                const borderColor = randomColor({ format: "rgba", alpha: 1 });
-                const bgColor =
-                  borderColor.substr(0, borderColor.length - 2) + "0.2)";
-                // const borderColor =
-                return {
-                  ...p,
-                  color: {
-                    bg: bgColor,
-                    border: borderColor,
-                  },
-                };
-              }
+      try {
+        setAlreadyVotedLoading(true);
+        const response = await axios(`/api/projects/${router.query.projectId}`);
+        await updateProjectWithTheGivenProject(response);
+      } catch (e) {
+        if (e.response && e.response.data && e.response.data.message) {
+          return alert.error(e.response.data.message);
+        }
+        return alert.error(e.message);
+      }
+    }
+  };
+
+  const updateProjectWithTheGivenProject = async (response) => {
+    try {
+      const totalSupply = 1000000;
+      const response = await axios(`/api/projects/${router.query.projectId}`);
+      if (response && response.data && response.data.project) {
+        let participantsUpdate;
+
+        if (participantsColorPropAdded) {
+          participantsUpdate = response.data.project.participants.map((p) => {
+            const participantId = p._id;
+            const tryFind = project.participants.find(
+              (p) => p._id === participantId
             );
 
-            const newPieChartData = { ...emptyPieChartData };
-            participantsColorPropAdded.forEach((p) => {
-              newPieChartData.labels.push(p.author);
-              newPieChartData.datasets[0].data.push(p.voteCount);
-              newPieChartData.datasets[0].backgroundColor.push(p.color.bg);
-              newPieChartData.datasets[0].borderColor.push(p.color.border);
-            });
+            console.log({ tryFind });
+            if (tryFind) {
+              return {
+                ...p,
+                color: tryFind.color,
+              };
+            } else {
+              const borderColor = randomColor({
+                format: "rgba",
+                alpha: 1,
+              });
+              const bgColor =
+                borderColor.substr(0, borderColor.length - 2) + "0.2)";
 
-            setProject({
-              ...project,
-              ...response.data.project,
-              loading: false,
-              participants: participantsColorPropAdded,
-              pieChartData: newPieChartData,
-            });
-          }
-        } catch (e) {
-          if (e.response && e.response.data && e.response.data.message) {
-            return alert.error(e.response.data.message);
-          }
-          return alert.error(e.message);
+              return {
+                ...p,
+                color: {
+                  bg: bgColor,
+                  border: borderColor,
+                },
+              };
+            }
+          });
+        } else {
+          participantsUpdate = response.data.project.participants;
         }
-      };
-      getProject();
+
+        if (!participantsColorPropAdded) {
+          participantsUpdate = participantsUpdate.map((p) => {
+            const borderColor = randomColor({
+              format: "rgba",
+              alpha: 1,
+            });
+            const bgColor =
+              borderColor.substr(0, borderColor.length - 2) + "0.2)";
+
+            return {
+              ...p,
+              color: {
+                bg: bgColor,
+                border: borderColor,
+              },
+            };
+          });
+          setParticipantsColorPropAdded(true);
+        }
+
+        const totalTokenVoted = response.data.project.participants
+          .map((p) => p.voteCount)
+          .reduce((a, b) => a + b, 0);
+
+        participantsUpdate = participantsUpdate.map((p) => {
+          const votePercentageNumber = (p.voteCount / totalTokenVoted) * 100;
+          const votePercentageString = String(votePercentageNumber).substr(
+            0,
+            5
+          );
+          return {
+            ...p,
+            votePercentage: votePercentageString,
+          };
+        });
+
+        setProject({
+          ...project,
+          ...response.data.project,
+          loading: false,
+          participants: participantsUpdate,
+          pieChartData: {
+            ...emptyPieChartData,
+            labels: participantsUpdate.map((p) => p.author),
+            datasets: [
+              {
+                ...emptyPieChartData.datasets[0],
+                data: participantsUpdate.map((p) => p.voteCount),
+                backgroundColor: participantsUpdate.map((p) => p.color.bg),
+                borderColor: participantsUpdate.map((p) => p.color.border),
+              },
+            ],
+          },
+        });
+        setAlreadyVotedLoading(false);
+      }
+    } catch (e) {
+      if (e.response && e.response.data && e.response.data.message) {
+        return alert.error(e.response.data.message);
+      }
+      return alert.error(e.message);
+    }
+  };
+
+  useEffect(() => {
+    checkUserAlreadyVoted();
+  }, [state.user.loggedIn, project]);
+
+  useEffect(async () => {
+    if (router.query.projectId) {
+      try {
+        const response = await axios(`/api/projects/${router.query.projectId}`);
+        await updateProjectWithTheGivenProject(response);
+      } catch (e) {
+        if (e.response && e.response.status === 404) {
+          return router.push("/");
+        }
+        if (e.response && e.response.data && e.response.data.message) {
+          return alert.error(e.response.data.message);
+        }
+        return alert.error(e.message);
+      }
     }
   }, [router.query.projectId]);
 
-  const walletConnectSign = async () => {
+  const signAndUpdateState = async () => {
     if (!state.user.loggedIn) {
       await walletConnect.killSession();
       return dispatch(userLogout());
@@ -299,7 +396,7 @@ export default function ProjectDetail() {
         },
       });
 
-      await walletConnectSign();
+      await signAndUpdateState();
     }
   }, [modals[1].confirmed]);
 
@@ -316,50 +413,18 @@ export default function ProjectDetail() {
             }
           );
 
-          if (response && response.data && response.data.project) {
-            const participantsColorPropAdded = response.data.project.participants.map(
-              (p) => {
-                const borderColor = randomColor({ format: "rgba", alpha: 1 });
-                const bgColor =
-                  borderColor.substr(0, borderColor.length - 2) + "0.2)";
-                // const borderColor =
-                return {
-                  ...p,
-                  color: {
-                    bg: bgColor,
-                    border: borderColor,
-                  },
-                };
-              }
-            );
-
-            const newPieChartData = { ...emptyPieChartData };
-            participantsColorPropAdded.forEach((p) => {
-              newPieChartData.labels.push(p.author);
-              newPieChartData.datasets[0].data.push(p.voteCount);
-              newPieChartData.datasets[0].backgroundColor.push(p.color.bg);
-              newPieChartData.datasets[0].borderColor.push(p.color.border);
-            });
-
-            setProject({
-              ...project,
-              ...response.data.project,
-              loading: false,
-              participants: participantsColorPropAdded,
-              pieChartData: newPieChartData,
-            });
-            setModals({
-              ...modals,
-              1: {
-                show: false,
-                confirmed: true,
-              },
-              2: {
-                show: false,
-                confirmed: true,
-              },
-            });
-          }
+          await updateProjectWithTheGivenProject(response);
+          setModals({
+            ...modals,
+            1: {
+              show: false,
+              confirmed: true,
+            },
+            2: {
+              show: false,
+              confirmed: true,
+            },
+          });
         } catch (e) {
           setProject({
             ...project,
@@ -401,50 +466,18 @@ export default function ProjectDetail() {
             }
           );
 
-          if (response && response.data && response.data.project) {
-            const participantsColorPropAdded = response.data.project.participants.map(
-              (p) => {
-                const borderColor = randomColor({ format: "rgba", alpha: 1 });
-                const bgColor =
-                  borderColor.substr(0, borderColor.length - 2) + "0.2)";
-                // const borderColor =
-                return {
-                  ...p,
-                  color: {
-                    bg: bgColor,
-                    border: borderColor,
-                  },
-                };
-              }
-            );
-
-            const newPieChartData = { ...emptyPieChartData };
-            participantsColorPropAdded.forEach((p) => {
-              newPieChartData.labels.push(p.author);
-              newPieChartData.datasets[0].data.push(p.voteCount);
-              newPieChartData.datasets[0].backgroundColor.push(p.color.bg);
-              newPieChartData.datasets[0].borderColor.push(p.color.border);
-            });
-
-            setProject({
-              ...project,
-              ...response.data.project,
-              loading: false,
-              participants: participantsColorPropAdded,
-              pieChartData: newPieChartData,
-            });
-            setModals({
-              ...modals,
-              1: {
-                show: false,
-                confirmed: true,
-              },
-              2: {
-                show: false,
-                confirmed: true,
-              },
-            });
-          }
+          await updateProjectWithTheGivenProject(response);
+          setModals({
+            ...modals,
+            1: {
+              show: false,
+              confirmed: true,
+            },
+            2: {
+              show: false,
+              confirmed: true,
+            },
+          });
         } catch (e) {
           setProject({
             ...project,
@@ -474,15 +507,6 @@ export default function ProjectDetail() {
   }, [project.metamaskSign.signature]);
 
   const onClickVoteBtn = async () => {
-    //find participant id by index
-    let participantId;
-
-    if (project.selectedParticipant || project.selectedParticipant === 0) {
-      participantId = project.participants[project.selectedParticipant]._id;
-    } else {
-      return alert.error("Please make a choice!");
-    }
-
     //confirm modals first
     if (!modals[1].confirmed && !modals[2].confirmed) {
       return setModals({
@@ -512,7 +536,7 @@ export default function ProjectDetail() {
       ) : (
         <>
           <div className="project-detail">
-            <Header as="h1" className="projects-title" textAlign="center">
+            <Header as="h1" className="projects-title">
               {project.name}
             </Header>
             <Divider />
@@ -551,7 +575,11 @@ export default function ProjectDetail() {
                     }}
                   >
                     <div className="option-left">
-                      <Radio checked={project.selectedParticipant === index} />
+                      {!isUserAlreadyVoteThisProject && (
+                        <Radio
+                          checked={project.selectedParticipant === index}
+                        />
+                      )}
                     </div>
                     <div className="option-right">
                       <div className="option-right-top">
@@ -570,9 +598,9 @@ export default function ProjectDetail() {
                         width: `${p.voteCount}%`,
                       }}
                     ></div>
-                    <div className="option-votePercent">{`${p.voteCount}%`}</div>
-                    {project.isUserAlreadyVoteThisProject &&
-                      project.isUserAlreadyVoteThisProject == p._id && (
+                    <div className="option-votePercent">{`${p.votePercentage}%`}</div>
+                    {isUserAlreadyVoteThisProject &&
+                      isUserAlreadyVoteThisProject == p._id && (
                         <div className="option-checked">
                           <svg viewBox="0 0 507.2 507.2">
                             <circle
@@ -596,7 +624,7 @@ export default function ProjectDetail() {
                 </div>
               );
             })}
-            {project.isUserAlreadyVoteThisProject ? null : (
+            {isUserAlreadyVoteThisProject ? null : (
               <div className="submit-vote-row">
                 <Button onClick={onClickVoteBtn} primary>
                   Submit
@@ -612,49 +640,97 @@ export default function ProjectDetail() {
           <div className="last-votes">
             <Header as="h3" className="last-votes-title">
               Last Votes
-              <Button icon className="refresh-button">
+              <Button
+                icon
+                className={clsx({
+                  "refresh-button": true,
+                  refreshing: alreadyVotedLoading,
+                })}
+                onClick={refreshAlreadyVoted}
+              >
                 <Icon size="tiny" name="refresh" />
               </Button>
             </Header>
-            <Feed>
-              {lastVoteSprings.map((styles, i, b) => {
-                const voted = project.alreadyVoted[i];
-                const findParticipant = project.participants.find(
-                  (p) => p._id === voted.participantId
-                );
-                const dateFormat = moment(Number(voted.vote_date)).fromNow();
 
-                return (
-                  <animated.div
-                    scrollTop={0}
-                    className="ui event"
-                    style={{
-                      ...styles,
-                      backgroundColor: findParticipant.color.bg,
-                    }}
-                    key={"vote-key-" + i}
-                  >
-                    <Feed.Label>
-                      <img src="https://react.semantic-ui.com/images/avatar/small/elliot.jpg" />
-                    </Feed.Label>
-                    <Feed.Content
+            {lastVoteSprings.length > 0 ? (
+              <Feed>
+                {lastVoteSprings.map((styles, i, b) => {
+                  const voted = project.alreadyVoted[i];
+                  const findParticipant = project.participants.find(
+                    (p) => p._id === voted.participantId
+                  );
+                  const dateFormat = moment(Number(voted.vote_date)).fromNow();
+
+                  return (
+                    <animated.div
+                      scrollTop={0}
+                      className="ui event"
                       style={{
+                        ...styles,
                         backgroundColor: findParticipant.color.bg,
                       }}
+                      key={"vote-key-" + i}
                     >
-                      <Feed.Date>{dateFormat}</Feed.Date>
-                      <span className="feed-wallet">{voted.wallet}</span>
-                      {`  Voted For ${findParticipant.author}`}
-                      <Divider />
-                      <p>{`Have ${voted.tokenHave} ETB Tokens`}</p>
-                    </Feed.Content>
-                  </animated.div>
-                );
-              })}
-            </Feed>
+                      <Feed.Content
+                      // style={{
+                      //   backgroundColor: findParticipant.color.bg,
+                      // }}
+                      >
+                        <Feed.Date>{dateFormat}</Feed.Date>
+                        <span className="feed-wallet">{voted.wallet}</span>
+                        {`  Voted For ${findParticipant.author}`}
+                        <Divider />
+                        <p>{`Have ${voted.tokenHave} ETB Tokens`}</p>
+                      </Feed.Content>
+                    </animated.div>
+                  );
+                })}
+              </Feed>
+            ) : (
+              <Header as="h4">No One vote this project yet</Header>
+            )}
           </div>
-          <div className="chart-wrapper-outside">
-            <div className="chart-wrapper-inside">{pieChartMemo}</div>
+          <div className="sticky-wrapper-outside">
+            <div className="chart">{pieChartMemo}</div>
+            <div className="dates">
+              <div className="date">
+                <span className="date-title">START</span>
+                <span className="date-content">
+                  <span className="top">
+                    {new Date(Number(project.start_date)).toLocaleDateString()}
+                  </span>
+                  <span className="bottom">
+                    {" "}
+                    {new Date(Number(project.start_date)).toLocaleString(
+                      "en-US",
+                      {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                      }
+                    )}
+                  </span>
+                </span>
+              </div>
+              <div className="date">
+                <span className="date-title">END</span>
+                <span className="date-content">
+                  <span className="top">
+                    {new Date(Number(project.end_date)).toLocaleDateString()}
+                  </span>
+                  <span className="bottom">
+                    {new Date(Number(project.end_date)).toLocaleString(
+                      "en-US",
+                      {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                      }
+                    )}
+                  </span>
+                </span>
+              </div>
+            </div>
           </div>
           <Modal
             open={modals[1].show}

@@ -1,9 +1,10 @@
 import { authenticateAdmin, setDefaultHeaders } from "../../../../middleware";
-import Joi from "joi";
+import Joi, { types } from "joi";
 
 import connectDb from "../../../../db/connect";
 
 import Project from "../../../../db/models/Project";
+import { Types } from "mongoose";
 
 const updateProjectSchema = Joi.object({
   name: Joi.string().required().trim(),
@@ -35,6 +36,13 @@ export default async (req, res) => {
           message: "Missing Query Params! (projectId)",
         });
       }
+
+      if (!Types.ObjectId.isValid(req.query.projectId)) {
+        return res.status(404).json({
+          message: "Project Not Found!",
+        });
+      }
+
       await connectDb();
 
       const project = await Project.findOne({

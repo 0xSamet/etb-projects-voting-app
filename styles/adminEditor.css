@@ -37,6 +37,10 @@
   min-height: 100px;
 }
 
+.RichEditor-editor h6 {
+  margin: auto;
+}
+
 .RichEditor-hidePlaceholder .public-DraftEditorPlaceholder-root {
   display: none;
 }
@@ -70,6 +74,10 @@
   margin-right: 16px;
   padding: 2px 0;
   display: inline-block;
+}
+
+.RichEditor-activeButton {
+  color: #5890ff;
 }
 
 .RichEditor-activeButton {

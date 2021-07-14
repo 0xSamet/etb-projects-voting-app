@@ -4,6 +4,7 @@ import connectDb from "../../../../db/connect";
 import Joi from "joi";
 import { recoverPersonalSignature } from "eth-sig-util";
 import { convertUtf8ToHex } from "@walletconnect/utils";
+import axios from "axios";
 
 const voteProjectSchema = Joi.object({
   signature: Joi.string().required().trim(),
@@ -29,6 +30,33 @@ export default async (req, res) => {
         return res.status(422).json({
           message: e.details[0].message,
           path: e.details[0].path[0],
+        });
+      }
+
+      let tokenHave = 0;
+      const totalSupply = 1000000;
+
+      try {
+        const response = await axios(
+          `${process.env.BASE_URL}/api/token/balanceOf/${validateRequest.wallet}`
+        );
+
+        if (response && response.data && response.data.tokenHave) {
+          tokenHave = Number(response.data.tokenHave.replace(",", ""));
+          console.log({
+            tokenHave: response.data.tokenHave,
+            format: Number(response.data.tokenHave),
+          });
+        }
+      } catch (err) {
+        console.log(err);
+        console.log(JSON.stringify(err));
+        return res.status(err.response.status).json(err.response.data);
+      }
+
+      if (tokenHave < 0.1) {
+        return res.status(422).json({
+          message: "You need atleast 0.1 Etb Token To Vote",
         });
       }
 
@@ -81,11 +109,11 @@ export default async (req, res) => {
         });
       }
 
-      participantInDb.voteCount = participantInDb.voteCount + 1;
+      participantInDb.voteCount = participantInDb.voteCount + tokenHave;
 
       projectToVote.alreadyVoted.push({
         wallet: validateRequest.wallet,
-        tokenHave: 0,
+        tokenHave: tokenHave,
         vote_date: new Date().getTime().toString(),
         participantId: parseSignedMessage.participantId,
       });

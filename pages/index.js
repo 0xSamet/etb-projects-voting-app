@@ -87,9 +87,20 @@ export default function Home() {
       if (response && response.data && response.data.projects) {
         setProjects({
           loading: false,
-          data: response.data.projects.sort(
-            (a, b) => a.sort_order - b.sort_order
-          ),
+          data: response.data.projects
+            .sort((a, b) => a.sort_order - b.sort_order)
+            .map((project) => {
+              let formatDescription = project.short_description;
+
+              if (formatDescription.length > 600) {
+                formatDescription = formatDescription.substr(0, 600);
+              }
+
+              return {
+                ...project,
+                short_description: formatDescription,
+              };
+            }),
         });
       }
     } catch (e) {
@@ -125,10 +136,19 @@ export default function Home() {
             <div className="project">
               <div className="card-left">
                 <Header as="h4" className="project-title">
-                  {project.name}
+                  {project.name}- {project.short_description.length}
                 </Header>
                 <div className="project-description">
-                  <p>{project.short_description}</p>
+                  <p>
+                    {project.short_description}
+                    {project.short_description.length > 599 && (
+                      <p className="read-more-wrapper">
+                        <Link href={`/projects/${project._id}`}>
+                          <a className="text">Read More...</a>
+                        </Link>
+                      </p>
+                    )}
+                  </p>
                 </div>
               </div>
               <div className="card-right">
