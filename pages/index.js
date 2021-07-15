@@ -17,6 +17,7 @@ import { convertFromRaw, Editor, EditorState } from "draft-js";
 import { userLoginSuccess, userLogout } from "../store";
 import { useWalletConnectContext } from "../lib/walletConnectContext";
 import { useDispatch } from "react-redux";
+import { useRouter } from "next/router";
 
 export default function Home() {
   const [projects, setProjects] = useState({
@@ -26,55 +27,25 @@ export default function Home() {
   const alert = useAlert();
   const { walletConnect } = useWalletConnectContext();
   const dispatch = useDispatch();
+  const router = useRouter();
 
-  useEffect(() => {
-    walletConnect.on("connect", (error, payload) => {
-      if (error) {
-        return console.log(error.message);
-      }
-      const { accounts } = payload.params[0];
-      return dispatch(
-        userLoginSuccess({
-          wallet: accounts[0],
-          connectedWith: "wallet-connect",
-        })
-      );
-    });
-
-    walletConnect.on("session_update", (error, payload) => {
-      if (error) {
-        return console.log(error.message);
-      }
-      const { accounts } = payload.params[0];
-      return dispatch(
-        userLoginSuccess({
-          wallet: accounts[0],
-          connectedWith: "wallet-connect",
-        })
-      );
-    });
-
-    walletConnect.on("disconnect", (error, payload) => {
-      if (error) {
-        return console.log(error.message);
-      }
-      return dispatch(userLogout());
-    });
-
-    if (walletConnect.connected) {
-      const { accounts } = walletConnect;
-      return dispatch(
-        userLoginSuccess({
-          wallet: accounts[0],
-          connectedWith: "wallet-connect",
-        })
-      );
-    }
-  }, []);
+  //console.log(router);
 
   useEffect(() => {
     getProjects();
+
+    router.events.on("routeChangeComplete", getProjectsOnIconClick);
+
+    return () => {
+      router.events.off("routeChangeComplete", getProjectsOnIconClick);
+    };
   }, []);
+
+  const getProjectsOnIconClick = (path) => {
+    if (path === "/") {
+      return getProjects();
+    }
+  };
 
   const getProjects = async () => {
     try {
@@ -136,17 +107,17 @@ export default function Home() {
             <div className="project">
               <div className="card-left">
                 <Header as="h4" className="project-title">
-                  {project.name}- {project.short_description.length}
+                  {project.name}
                 </Header>
                 <div className="project-description">
                   <p>
                     {project.short_description}
                     {project.short_description.length > 599 && (
-                      <p className="read-more-wrapper">
+                      <span className="read-more-wrapper">
                         <Link href={`/projects/${project._id}`}>
                           <a className="text">Read More...</a>
                         </Link>
-                      </p>
+                      </span>
                     )}
                   </p>
                 </div>

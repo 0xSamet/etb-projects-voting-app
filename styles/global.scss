@@ -220,6 +220,7 @@ a {
                 margin-left: 5px;
                 color: #36b0b0;
                 .text {
+                  display: inline-block;
                   position: relative;
                   z-index: 1;
                   transform: translateX(-5px);
@@ -323,6 +324,10 @@ a {
           .submit-vote-row {
             filter: blur(2px);
           }
+        }
+        .options-title {
+          box-shadow: 0px 1px 3px -1px rgb(143 143 143 / 20%);
+          padding-bottom: 5px;
         }
         .option {
           margin: 15px 0px;
@@ -630,7 +635,7 @@ a {
         path {
           fill: #fff;
           &:nth-child(2) {
-            fill: #000;
+            fill: #333;
           }
         }
       }

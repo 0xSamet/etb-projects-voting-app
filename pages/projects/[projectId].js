@@ -206,17 +206,29 @@ export default function ProjectDetail() {
           .map((p) => p.voteCount)
           .reduce((a, b) => a + b, 0);
 
-        participantsUpdate = participantsUpdate.map((p) => {
-          const votePercentageNumber = (p.voteCount / totalTokenVoted) * 100;
-          const votePercentageString = String(votePercentageNumber).substr(
-            0,
-            5
-          );
-          return {
-            ...p,
-            votePercentage: votePercentageString,
-          };
-        });
+        console.log({ totalTokenVoted });
+
+        if (totalTokenVoted === 0) {
+          participantsUpdate = participantsUpdate.map((p) => {
+            return {
+              ...p,
+              votePercentage: "0",
+            };
+          });
+        } else {
+          participantsUpdate = participantsUpdate.map((p) => {
+            const votePercentageNumber = (p.voteCount / totalTokenVoted) * 100;
+            const votePercentageString = String(votePercentageNumber).substr(
+              0,
+              5
+            );
+
+            return {
+              ...p,
+              votePercentage: votePercentageString,
+            };
+          });
+        }
 
         setProject({
           ...project,
@@ -553,84 +565,91 @@ export default function ProjectDetail() {
             <Header as="h3" className="options-title">
               Vote This Project
             </Header>
-            {project.participants.map((p, index) => {
-              // let isChecked = false;
+            {project.participants.length > 0 ? (
+              <>
+                {project.participants.map((p, index) => {
+                  // let isChecked = false;
 
-              // if (project.isUserAlreadyVoteThisProject) {
-              //   const tryFind =
-              // }
+                  // if (project.isUserAlreadyVoteThisProject) {
+                  //   const tryFind =
+                  // }
 
-              return (
-                <div
-                  className="option"
-                  key={p._id}
-                  onClick={() =>
-                    setProject({ ...project, selectedParticipant: index })
-                  }
-                >
-                  <Segment
-                    compact
-                    style={{
-                      borderColor: p.color.border,
-                    }}
-                  >
-                    <div className="option-left">
-                      {!isUserAlreadyVoteThisProject && (
-                        <Radio
-                          checked={project.selectedParticipant === index}
-                        />
-                      )}
-                    </div>
-                    <div className="option-right">
-                      <div className="option-right-top">
-                        <span className="bolder">Author: </span>
-                        <span>{p.author}</span>
-                      </div>
-                      <div className="option-right-bottom">
-                        <span className="bolder">Source: </span>
-                        <span>{p.source}</span>
-                      </div>
-                    </div>
+                  return (
                     <div
-                      className="option-bg"
-                      style={{
-                        background: p.color.bg,
-                        width: `${p.voteCount}%`,
-                      }}
-                    ></div>
-                    <div className="option-votePercent">{`${p.votePercentage}%`}</div>
-                    {isUserAlreadyVoteThisProject &&
-                      isUserAlreadyVoteThisProject == p._id && (
-                        <div className="option-checked">
-                          <svg viewBox="0 0 507.2 507.2">
-                            <circle
-                              cx="253.6"
-                              cy="253.6"
-                              r="253.6"
-                              fill={p.color.border}
+                      className="option"
+                      key={p._id}
+                      onClick={() =>
+                        setProject({ ...project, selectedParticipant: index })
+                      }
+                    >
+                      <Segment
+                        compact
+                        style={{
+                          borderColor: p.color.border,
+                        }}
+                      >
+                        <div className="option-left">
+                          {!isUserAlreadyVoteThisProject && (
+                            <Radio
+                              checked={project.selectedParticipant === index}
                             />
-                            <path
-                              d="M188.8 368l130.4 130.4c108-28.8 188-127.2 188-244.8v-7.2L404.8 152l-216 216z"
-                              fill={p.color.border}
-                            />
-                            <g fill="#fff">
-                              <path d="M260 310.4c11.2 11.2 11.2 30.4 0 41.6l-23.2 23.2c-11.2 11.2-30.4 11.2-41.6 0L93.6 272.8c-11.2-11.2-11.2-30.4 0-41.6l23.2-23.2c11.2-11.2 30.4-11.2 41.6 0L260 310.4z" />
-                              <path d="M348.8 133.6c11.2-11.2 30.4-11.2 41.6 0l23.2 23.2c11.2 11.2 11.2 30.4 0 41.6l-176 175.2c-11.2 11.2-30.4 11.2-41.6 0l-23.2-23.2c-11.2-11.2-11.2-30.4 0-41.6l176-175.2z" />
-                            </g>
-                          </svg>
+                          )}
                         </div>
-                      )}
-                  </Segment>
-                </div>
-              );
-            })}
-            {isUserAlreadyVoteThisProject ? null : (
-              <div className="submit-vote-row">
-                <Button onClick={onClickVoteBtn} primary>
-                  Submit
-                </Button>
-              </div>
+                        <div className="option-right">
+                          <div className="option-right-top">
+                            <span className="bolder">Author: </span>
+                            <span>{p.author}</span>
+                          </div>
+                          <div className="option-right-bottom">
+                            <span className="bolder">Source: </span>
+                            <span>{p.source}</span>
+                          </div>
+                        </div>
+                        <div
+                          className="option-bg"
+                          style={{
+                            background: p.color.bg,
+                            width: `${p.voteCount}%`,
+                          }}
+                        ></div>
+                        <div className="option-votePercent">{`${p.votePercentage}%`}</div>
+                        {isUserAlreadyVoteThisProject &&
+                          isUserAlreadyVoteThisProject == p._id && (
+                            <div className="option-checked">
+                              <svg viewBox="0 0 507.2 507.2">
+                                <circle
+                                  cx="253.6"
+                                  cy="253.6"
+                                  r="253.6"
+                                  fill={p.color.border}
+                                />
+                                <path
+                                  d="M188.8 368l130.4 130.4c108-28.8 188-127.2 188-244.8v-7.2L404.8 152l-216 216z"
+                                  fill={p.color.border}
+                                />
+                                <g fill="#fff">
+                                  <path d="M260 310.4c11.2 11.2 11.2 30.4 0 41.6l-23.2 23.2c-11.2 11.2-30.4 11.2-41.6 0L93.6 272.8c-11.2-11.2-11.2-30.4 0-41.6l23.2-23.2c11.2-11.2 30.4-11.2 41.6 0L260 310.4z" />
+                                  <path d="M348.8 133.6c11.2-11.2 30.4-11.2 41.6 0l23.2 23.2c11.2 11.2 11.2 30.4 0 41.6l-176 175.2c-11.2 11.2-30.4 11.2-41.6 0l-23.2-23.2c-11.2-11.2-11.2-30.4 0-41.6l176-175.2z" />
+                                </g>
+                              </svg>
+                            </div>
+                          )}
+                      </Segment>
+                    </div>
+                  );
+                })}
+                {isUserAlreadyVoteThisProject ? null : (
+                  <div className="submit-vote-row">
+                    <Button onClick={onClickVoteBtn} primary>
+                      Submit
+                    </Button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <Header as="h4">No participants for this project yet</Header>
             )}
+
             <div className="vote-need-login-wrapper">
               <div className="message-box">
                 <Header as="h3">You need the connect wallet to vote</Header>
@@ -687,7 +706,7 @@ export default function ProjectDetail() {
                 })}
               </Feed>
             ) : (
-              <Header as="h4">No One vote this project yet</Header>
+              <Header as="h4">No one vote this project yet</Header>
             )}
           </div>
           <div className="sticky-wrapper-outside">
