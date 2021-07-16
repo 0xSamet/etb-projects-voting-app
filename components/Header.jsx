@@ -70,6 +70,7 @@ export default function Header() {
           );
         }
       } catch (e) {
+        setUpdateTokenHaveLoading(false);
         if (e.response && e.response.data && e.response.data.message) {
           return alert.error(e.response.data.message);
         }
