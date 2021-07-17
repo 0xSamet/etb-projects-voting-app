@@ -103,6 +103,7 @@ export default async (req, res) => {
             message: "Invalid Wallet Adress",
           });
         } else {
+          console.log("err", err);
           return res.status(422).json({
             message: err.message,
           });
