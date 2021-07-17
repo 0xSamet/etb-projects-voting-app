@@ -75,8 +75,12 @@ export default async (req, res) => {
       //   });
       // }
 
+      console.log({ token });
+
       try {
+        console.log("start");
         tokenHave = await token.methods.balanceOf(req.query.wallet).call();
+        console.log("end");
         console.log({ tokenHave });
 
         if (typeof tokenHave !== "string") {
