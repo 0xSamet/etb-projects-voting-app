@@ -65,7 +65,7 @@ export default function Header() {
           setUpdateTokenHaveLoading(false);
           dispatch(
             updateUserTokenHave({
-              tokenHave: response.data.tokenHave,
+              tokenHave: Number(response.data.tokenHave),
             })
           );
         }

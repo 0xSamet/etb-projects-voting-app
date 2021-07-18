@@ -82,29 +82,8 @@ export default async (req, res) => {
       // console.log({ token });
 
       try {
-        console.log(
-          "start",
-          req.query.wallet,
-          Web3.utils.utf8ToHex(req.query.wallet)
-        );
         tokenHave = await token.methods.balanceOf(req.query.wallet).call();
-        console.log("end");
-        console.log({ tokenHave });
-
-        if (typeof tokenHave !== "string") {
-          tokenHave = 0;
-        }
-
-        const decimalsIndexInTokens = tokenHave.length - decimals;
-
-        const decimal = tokenHave.substr(decimalsIndexInTokens, 4);
-
-        if (tokenHave.length < 18) {
-          tokenHave = 0;
-        } else {
-          tokenHave = tokenHave.substr(0, decimalsIndexInTokens);
-          tokenHave = tokenHave + `.${decimal}`;
-        }
+        tokenHave = Web3.utils.fromWei(tokenHave);
       } catch (err) {
         console.log("err", err);
         if (err.code === "INVALID_ARGUMENT") {
@@ -120,10 +99,7 @@ export default async (req, res) => {
 
       return res.json({
         success: true,
-        tokenHave:
-          tokenHave === 0
-            ? tokenHave.toString()
-            : numeral(tokenHave).format("0,0.0000"),
+        tokenHave: numeral(tokenHave).format("0,0.000000000000000000"),
       });
 
     default:
