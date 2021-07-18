@@ -12,9 +12,13 @@ export default async (req, res) => {
           message: "Missing Query Params! (wallet)",
         });
       }
-      const web3 = new Web3(
-        new Web3.providers.HttpProvider(process.env.WEB3_PROVIDER)
-      );
+      console.log({
+        env: process.env.WEB3_PROVIDER,
+      });
+      const web3 = new Web3(process.env.WEB3_PROVIDER);
+      // console.log({
+      //   web3,
+      // });
       const token = new web3.eth.Contract(
         Token.abi,
         Token.networks[process.env.NEXT_PUBLIC_NETWORK_ID].address
@@ -75,13 +79,15 @@ export default async (req, res) => {
       //   });
       // }
 
-      console.log({ token });
+      // console.log({ token });
 
       try {
-        console.log("start");
-        tokenHave = await token.methods
-          .balanceOf({ from: req.query.wallet })
-          .call();
+        console.log(
+          "start",
+          req.query.wallet,
+          Web3.utils.utf8ToHex(req.query.wallet)
+        );
+        tokenHave = await token.methods.balanceOf(req.query.wallet).call();
         console.log("end");
         console.log({ tokenHave });
 
@@ -100,12 +106,12 @@ export default async (req, res) => {
           tokenHave = tokenHave + `.${decimal}`;
         }
       } catch (err) {
+        console.log("err", err);
         if (err.code === "INVALID_ARGUMENT") {
           return res.status(422).json({
             message: "Invalid Wallet Adress",
           });
         } else {
-          console.log("err", err);
           return res.status(422).json({
             message: err.message,
           });
