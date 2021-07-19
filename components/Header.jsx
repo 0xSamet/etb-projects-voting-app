@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { useWalletConnectContext } from "../lib/walletConnectContext";
 import clsx from "clsx";
 import axios from "axios";
+import Web3 from "web3";
 
 export default function Header() {
   //const alert = useAlert();
@@ -33,7 +34,7 @@ export default function Header() {
         // console.log(response);
       }
     } catch (e) {
-      // alert.error(e);
+      alert.error(e);
       console.log(e);
     }
   };
@@ -65,7 +66,7 @@ export default function Header() {
           setUpdateTokenHaveLoading(false);
           dispatch(
             updateUserTokenHave({
-              tokenHave: Number(response.data.tokenHave),
+              tokenHave: response.data.tokenHave,
             })
           );
         }

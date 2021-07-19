@@ -19,7 +19,7 @@ const updateProjectSchema = Joi.object({
         _id: Joi.string().trim().required(),
         author: Joi.string().trim().required(),
         source: Joi.string().trim().required(),
-        voteCount: Joi.number().default(0),
+        voteCount: Joi.string().default("0"),
         newParticipant: Joi.boolean(),
         deleted: Joi.boolean(),
       })

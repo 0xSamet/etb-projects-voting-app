@@ -29,8 +29,8 @@ export default function AdminAddProject() {
     description: EditorState.createEmpty(),
     short_description: "",
     sort_order: 0,
-    start_date: new Date(),
-    end_date: new Date(),
+    start_date: new Date(new Date().setSeconds(0)),
+    end_date: new Date(new Date().setSeconds(0)),
     participants: [],
   });
   const router = useRouter();

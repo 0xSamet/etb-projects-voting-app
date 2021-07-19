@@ -11,13 +11,13 @@ const projectSchema = new mongoose.Schema({
     {
       author: String,
       source: String,
-      voteCount: Number,
+      voteCount: String,
     },
   ],
   alreadyVoted: [
     {
       wallet: String,
-      tokenHave: Number,
+      tokenHave: String,
       vote_date: String,
       participantId: {
         type: mongoose.Schema.Types.ObjectId,

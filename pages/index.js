@@ -32,6 +32,17 @@ export default function Home() {
   //console.log(router);
 
   useEffect(() => {
+    if (walletConnect.connected) {
+      const { accounts } = walletConnect;
+      console.log({ walletConnect });
+      dispatch(
+        userLoginSuccess({
+          wallet: accounts[0],
+          connectedWith: "wallet-connect",
+        })
+      );
+    }
+
     getProjects();
 
     router.events.on("routeChangeComplete", getProjectsOnIconClick);

@@ -5,6 +5,8 @@ import Joi from "joi";
 import { recoverPersonalSignature } from "eth-sig-util";
 import { convertUtf8ToHex } from "@walletconnect/utils";
 import axios from "axios";
+import BigNumber from "bignumber.js";
+import Web3 from "web3";
 
 const voteProjectSchema = Joi.object({
   signature: Joi.string().required().trim(),
@@ -33,8 +35,7 @@ export default async (req, res) => {
         });
       }
 
-      let tokenHave = 0;
-      const totalSupply = 1000000;
+      let tokenHave = "0";
 
       try {
         const response = await axios(
@@ -42,11 +43,7 @@ export default async (req, res) => {
         );
 
         if (response && response.data && response.data.tokenHave) {
-          tokenHave = Number(response.data.tokenHave.replace(",", ""));
-          console.log({
-            tokenHave: response.data.tokenHave,
-            format: Number(response.data.tokenHave),
-          });
+          tokenHave = BigNumber(response.data.tokenHave);
         }
       } catch (err) {
         console.log(err);
@@ -54,7 +51,7 @@ export default async (req, res) => {
         return res.status(err.response.status).json(err.response.data);
       }
 
-      if (tokenHave < 0.1) {
+      if (tokenHave < BigNumber("0.1")) {
         return res.status(422).json({
           message: "You need atleast 0.1 Etb Token To Vote",
         });
@@ -76,17 +73,6 @@ export default async (req, res) => {
 
       await connectDb();
 
-      const isUserAlreadyVoted = await Project.findOne({
-        _id: parseSignedMessage.projectId,
-        "alreadyVoted.wallet": validateRequest.wallet,
-      });
-
-      if (isUserAlreadyVoted) {
-        return res.status(409).json({
-          message: "You Already Vote This Project!",
-        });
-      }
-
       const projectToVote = await Project.findOne({
         _id: req.query.projectId,
       }).select({
@@ -96,6 +82,33 @@ export default async (req, res) => {
       if (!projectToVote) {
         return res.status(404).json({
           message: "Project Not Found!",
+        });
+      }
+
+      const currentDate = new Date().getTime();
+      const isVotingStarted = currentDate - project.start_date > 0;
+      const isVotingEnded = project.end_date - currentDate < 0;
+
+      if (!isVotingStarted) {
+        return res.status(422).json({
+          message: "Voting didn't start yet!",
+        });
+      }
+
+      if (isVotingEnded) {
+        return res.status(422).json({
+          message: "Voting end!",
+        });
+      }
+
+      const isUserAlreadyVoted = await Project.findOne({
+        _id: parseSignedMessage.projectId,
+        "alreadyVoted.wallet": validateRequest.wallet,
+      });
+
+      if (isUserAlreadyVoted) {
+        return res.status(409).json({
+          message: "You Already Vote This Project!",
         });
       }
 
@@ -109,11 +122,20 @@ export default async (req, res) => {
         });
       }
 
-      participantInDb.voteCount = participantInDb.voteCount + tokenHave;
+      // console.log({
+      //   tokenHave,
+      //   partiCount: participantInDb.voteCount,
+      //   bigpartiCount: BigNumber(participantInDb.voteCount),
+      //   a: BigNumber(participantInDb.voteCount).plus(tokenHave),
+      // });
+
+      participantInDb.voteCount = BigNumber(participantInDb.voteCount)
+        .plus(tokenHave)
+        .toFixed();
 
       projectToVote.alreadyVoted.push({
         wallet: validateRequest.wallet,
-        tokenHave: tokenHave,
+        tokenHave,
         vote_date: new Date().getTime().toString(),
         participantId: parseSignedMessage.participantId,
       });

@@ -28,6 +28,7 @@ import { useSpring, useSprings, animated } from "react-spring";
 import moment from "moment";
 import Web3 from "web3";
 import Token from "../../lib/ETBToken.json";
+import BigNumber from "bignumber.js";
 
 export default function ProjectDetail() {
   const router = useRouter();
@@ -61,6 +62,8 @@ export default function ProjectDetail() {
       signature: "",
       signedMessage: "",
     },
+    isVotingStarted: false,
+    isVotingEnded: false,
   });
   const [modals, setModals] = useState({
     1: {
@@ -154,8 +157,6 @@ export default function ProjectDetail() {
             const tryFind = project.participants.find(
               (p) => p._id === participantId
             );
-
-            console.log({ tryFind });
             if (tryFind) {
               return {
                 ...p,
@@ -204,11 +205,11 @@ export default function ProjectDetail() {
 
         const totalTokenVoted = response.data.project.participants
           .map((p) => p.voteCount)
-          .reduce((a, b) => a + b, 0);
+          .reduce((a, b) => BigNumber(a).plus(b).toFixed(), "0");
 
-        console.log({ totalTokenVoted });
+        console.log(totalTokenVoted);
 
-        if (totalTokenVoted === 0) {
+        if (totalTokenVoted == 0) {
           participantsUpdate = participantsUpdate.map((p) => {
             return {
               ...p,
@@ -217,7 +218,11 @@ export default function ProjectDetail() {
           });
         } else {
           participantsUpdate = participantsUpdate.map((p) => {
-            const votePercentageNumber = (p.voteCount / totalTokenVoted) * 100;
+            const votePercentageNumber = BigNumber(p.voteCount)
+              .dividedBy(totalTokenVoted)
+              .multipliedBy(100)
+              .toFixed();
+
             const votePercentageString = String(votePercentageNumber).substr(
               0,
               5
@@ -230,6 +235,8 @@ export default function ProjectDetail() {
           });
         }
 
+        const currentDate = new Date().getTime();
+
         setProject({
           ...project,
           ...response.data.project,
@@ -241,16 +248,21 @@ export default function ProjectDetail() {
             datasets: [
               {
                 ...emptyPieChartData.datasets[0],
-                data: participantsUpdate.map((p) => p.voteCount),
+                data: participantsUpdate.map((p) => Number(p.voteCount)),
                 backgroundColor: participantsUpdate.map((p) => p.color.bg),
                 borderColor: participantsUpdate.map((p) => p.color.border),
               },
             ],
           },
+          isVotingStarted: currentDate - project.start_date > 0,
+          isVotingEnded: project.end_date - currentDate < 0,
         });
         setAlreadyVotedLoading(false);
       }
     } catch (e) {
+      if (e.response.status === 404) {
+        return router.push("/");
+      }
       if (e.response && e.response.data && e.response.data.message) {
         return alert.error(e.response.data.message);
       }
@@ -352,19 +364,19 @@ export default function ProjectDetail() {
         },
         function (err, result) {
           if (err) {
+            setModals({
+              ...modals,
+              1: {
+                show: false,
+                confirmed: false,
+              },
+              2: {
+                show: false,
+                confirmed: false,
+              },
+            });
             if (err.code === 4001) {
-              setModals({
-                ...modals,
-                1: {
-                  show: false,
-                  confirmed: false,
-                },
-                2: {
-                  show: false,
-                  confirmed: false,
-                },
-              });
-              alert.error("Sign Canceled!");
+              return alert.error("Sign Canceled!");
             }
             return console.error(err);
           }
@@ -519,7 +531,9 @@ export default function ProjectDetail() {
   }, [project.metamaskSign.signature]);
 
   const onClickVoteBtn = async () => {
-    //confirm modals first
+    if (!project.selectedParticipant && project.selectedParticipant !== 0) {
+      return alert.error("Please make o choice!");
+    }
     if (!modals[1].confirmed && !modals[2].confirmed) {
       return setModals({
         ...modals,
@@ -538,6 +552,13 @@ export default function ProjectDetail() {
   const pieChartMemo = useMemo(() => <Pie data={project.pieChartData} />, [
     project.participants,
   ]);
+
+  const renderVotingHeader = useMemo(() => {
+    if (project.isVotingStarted && !project.isVotingEnded) {
+      return "Vote This Project";
+    }
+    return "Results";
+  }, []);
 
   return (
     <div className="project-page">
@@ -563,7 +584,7 @@ export default function ProjectDetail() {
             })}
           >
             <Header as="h3" className="options-title">
-              Vote This Project
+              {renderVotingHeader}
             </Header>
             {project.participants.length > 0 ? (
               <>
@@ -589,7 +610,9 @@ export default function ProjectDetail() {
                         }}
                       >
                         <div className="option-left">
-                          {!isUserAlreadyVoteThisProject && (
+                          {isUserAlreadyVoteThisProject ||
+                          project.isVotingEnded ||
+                          !project.isVotingStarted ? null : (
                             <Radio
                               checked={project.selectedParticipant === index}
                             />
@@ -609,7 +632,7 @@ export default function ProjectDetail() {
                           className="option-bg"
                           style={{
                             background: p.color.bg,
-                            width: `${p.voteCount}%`,
+                            width: `${p.votePercentage}%`,
                           }}
                         ></div>
                         <div className="option-votePercent">{`${p.votePercentage}%`}</div>
@@ -638,7 +661,9 @@ export default function ProjectDetail() {
                     </div>
                   );
                 })}
-                {isUserAlreadyVoteThisProject ? null : (
+                {isUserAlreadyVoteThisProject ||
+                project.isVotingEnded ||
+                !project.isVotingStarted ? null : (
                   <div className="submit-vote-row">
                     <Button onClick={onClickVoteBtn} primary>
                       Submit
