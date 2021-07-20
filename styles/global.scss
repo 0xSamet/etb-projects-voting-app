@@ -191,6 +191,34 @@ a {
     position: relative;
     .homepage {
       padding: 60px 0;
+      .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .tabs-options {
+        display: flex;
+        justify-content: center;
+        .tabs-option {
+          font-size: 18px;
+          background: #f1f1f1;
+          padding: 10px;
+          border-radius: 5px;
+          opacity: 0.7;
+          font-weight: 600;
+          cursor: pointer;
+          &.active {
+            opacity: 1;
+          }
+          &:nth-child(odd) {
+            margin: 0 5px;
+          }
+        }
+      }
+      .divider {
+        max-width: 500px;
+        margin: 15px auto;
+      }
       .projects-title {
         font-size: 27px;
       }
@@ -292,6 +320,79 @@ a {
                 }
                 .project-button-left,
                 .project-button-right {
+                  padding: 0px 0.78571429em;
+                }
+              }
+            }
+          }
+        }
+      }
+      .polls {
+        position: relative;
+        .poll {
+          display: flex;
+
+          background: #fff;
+          border: 5px solid transparent;
+          padding: 15px;
+          border-radius: 0.28571429rem;
+
+          -webkit-box-shadow: 0px 1px 5px 0px rgba(143, 143, 143, 0.2);
+          -moz-box-shadow: 0px 1px 5px 0px rgba(143, 143, 143, 0.2);
+          box-shadow: 0px 1px 5px 0px rgba(143, 143, 143, 0.2);
+
+          .card-left {
+            flex: 0 0 60%;
+            text-align: justify;
+          }
+          .card-right {
+            flex: 0 0 40%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+            .poll-button {
+              display: flex;
+            }
+            .card-right-top,
+            .card-right-bottom {
+              display: flex;
+              justify-content: center;
+              align-items: center;
+            }
+            .card-right-top {
+              button {
+                margin: 0;
+              }
+            }
+            .card-right-bottom {
+              padding-top: 15px;
+              .poll-button {
+                border-radius: 0.28571429rem;
+                border: 1px solid #e0e1e2;
+                padding: 0.78571429em 0.46em 0.78571429em;
+                text-align: center;
+                position: relative;
+                &:after {
+                  content: "";
+                  position: absolute;
+                  top: 50%;
+                  left: 50%;
+                  transform: translate(-50%, -50%);
+                  width: 0.1px;
+                  height: 57%;
+                  background: #e0e1e2;
+                }
+                h5 {
+                  font-size: 11px;
+                  margin: 0px 0px 2px 0px;
+                  font-weight: 900;
+                }
+                p {
+                  font-size: 10px;
+                }
+                .poll-button-left,
+                .poll-button-right {
                   padding: 0px 0.78571429em;
                 }
               }
@@ -551,6 +652,29 @@ a {
     }
     .admin-homepage {
       padding: 30px;
+      .tabs-options {
+        display: flex;
+        justify-content: center;
+        .tabs-option {
+          font-size: 18px;
+          background: #f1f1f1;
+          padding: 10px;
+          border-radius: 5px;
+          opacity: 0.7;
+          font-weight: 600;
+          cursor: pointer;
+          &.active {
+            opacity: 1;
+          }
+          &:nth-child(odd) {
+            margin: 0 5px;
+          }
+        }
+      }
+      .divider {
+        max-width: 500px;
+        margin: 15px auto;
+      }
       .admin-login-form-wrapper {
         max-width: 400px;
         margin: 0 auto;
@@ -574,6 +698,30 @@ a {
     }
     .admin-update-project-page {
       .update-project-tabs {
+        max-width: 850px;
+        margin: 0 auto;
+        padding-top: 60px;
+        margin-bottom: 20px;
+      }
+      .big-button {
+        max-width: 850px;
+        margin: 0 auto;
+      }
+    }
+    .admin-add-poll-page {
+      .add-poll-tabs {
+        max-width: 850px;
+        margin: 0 auto;
+        padding-top: 60px;
+        margin-bottom: 20px;
+      }
+      .big-button {
+        max-width: 850px;
+        margin: 0 auto;
+      }
+    }
+    .admin-update-poll-page {
+      .update-poll-tabs {
         max-width: 850px;
         margin: 0 auto;
         padding-top: 60px;

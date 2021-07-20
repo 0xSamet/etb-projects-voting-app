@@ -129,7 +129,7 @@ export default function Header() {
           <ul className="menu">
             <li className="active">
               <Link href="/">
-                <a>PROJECTS</a>
+                <a>HOME</a>
               </Link>
             </li>
           </ul>

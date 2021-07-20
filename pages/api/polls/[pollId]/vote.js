@@ -1,4 +1,4 @@
-import Project from "../../../../db/models/Project";
+import Poll from "../../../../db/models/Poll";
 import { setDefaultHeaders } from "../../../../middleware";
 import connectDb from "../../../../db/connect";
 import Joi from "joi";
@@ -8,7 +8,7 @@ import axios from "axios";
 import BigNumber from "bignumber.js";
 import Web3 from "web3";
 
-const voteProjectSchema = Joi.object({
+const votePollSchema = Joi.object({
   signature: Joi.string().required().trim(),
   signedMessage: Joi.string().required().trim(),
   wallet: Joi.string().required().trim().lowercase(),
@@ -18,15 +18,15 @@ export default async (req, res) => {
   await setDefaultHeaders(req, res);
   switch (req.method) {
     case "POST":
-      if (!req.query.projectId) {
+      if (!req.query.pollId) {
         return res.status(422).json({
-          message: "Missing Query Params! (projectId)",
+          message: "Missing Query Params! (pollId)",
         });
       }
 
       let validateRequest;
       try {
-        validateRequest = await voteProjectSchema.validateAsync(req.body);
+        validateRequest = await votePollSchema.validateAsync(req.body);
       } catch (e) {
         console.log(e);
         return res.status(422).json({
@@ -73,75 +73,67 @@ export default async (req, res) => {
 
       await connectDb();
 
-      const projectToVote = await Project.findOne({
-        _id: req.query.projectId,
+      const pollToVote = await Poll.findOne({
+        _id: req.query.pollId,
       }).select({
         __v: 0,
       });
 
-      if (!projectToVote) {
+      if (!pollToVote) {
         return res.status(404).json({
-          message: "Project Not Found!",
+          message: "Poll Not Found!",
         });
       }
 
       const currentDate = new Date().getTime();
-      const isVotingStarted = currentDate - projectToVote.start_date > 0;
-      const isVotingEnded = projectToVote.end_date - currentDate < 0;
+      const isVotingStarted = currentDate - pollToVote.start_date > 0;
+      const isVotingEnded = pollToVote.end_date - currentDate < 0;
 
       if (!isVotingStarted) {
         return res.status(422).json({
           message: "Voting didn't start yet!",
         });
       }
+
       if (isVotingEnded) {
         return res.status(422).json({
           message: "Voting end!",
         });
       }
 
-      const isUserAlreadyVoted = await Project.findOne({
-        _id: parseSignedMessage.projectId,
+      const isUserAlreadyVoted = await Poll.findOne({
+        _id: parseSignedMessage.pollId,
         "alreadyVoted.wallet": validateRequest.wallet,
       });
 
       if (isUserAlreadyVoted) {
         return res.status(409).json({
-          message: "You Already Vote This Project!",
+          message: "You Already Vote This Poll!",
         });
       }
 
-      let participantInDb = projectToVote.participants.id(
-        parseSignedMessage.participantId
-      );
+      let proposalInDb = pollToVote.proposals.id(parseSignedMessage.proposalId);
 
-      if (!participantInDb) {
+      if (!proposalInDb) {
         return res.status(404).json({
-          message: "Participant Not Found!",
+          message: "Proposal Not Found!",
         });
       }
 
-      // console.log({
-      //   tokenHave,
-      //   partiCount: participantInDb.voteCount,
-      //   bigpartiCount: BigNumber(participantInDb.voteCount),
-      //   a: BigNumber(participantInDb.voteCount).plus(tokenHave),
-      // });
-
-      participantInDb.voteCount = BigNumber(participantInDb.voteCount)
+      proposalInDb.voteCount = BigNumber(proposalInDb.voteCount)
         .plus(tokenHave)
         .toFixed();
 
-      projectToVote.alreadyVoted.push({
+      pollToVote.alreadyVoted.push({
         wallet: validateRequest.wallet,
         tokenHave,
         vote_date: new Date().getTime().toString(),
-        participantId: parseSignedMessage.participantId,
+        proposalId: parseSignedMessage.proposalId,
       });
 
-      await projectToVote.save();
+      await pollToVote.save();
 
-      return res.json({ success: true, project: projectToVote });
+      return res.json({ success: true, poll: pollToVote });
     default:
       return res.status(405).json({
         message: `Method ${req.method} Not Allowed!`,

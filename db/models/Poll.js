@@ -1,16 +1,14 @@
 import mongoose from "mongoose";
 
-const projectSchema = new mongoose.Schema({
+const pollSchema = new mongoose.Schema({
   name: String,
-  short_description: String,
   description: String,
   start_date: String,
   end_date: String,
   sort_order: Number,
-  participants: [
+  proposals: [
     {
-      author: String,
-      source: String,
+      text: String,
       voteCount: String,
     },
   ],
@@ -19,13 +17,13 @@ const projectSchema = new mongoose.Schema({
       wallet: String,
       tokenHave: String,
       vote_date: String,
-      participantId: {
+      proposalId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Project.participants",
+        ref: "Poll.proposals",
       },
     },
   ],
 });
 
-export default mongoose.models.Project ||
-  mongoose.model("Project", projectSchema, "projects");
+export default mongoose.models.Poll ||
+  mongoose.model("Poll", pollSchema, "polls");

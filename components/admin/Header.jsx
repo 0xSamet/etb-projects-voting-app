@@ -25,7 +25,7 @@ export default function AdminHeader() {
   return (
     <header>
       <div className="header-logo">
-        <Link href="/">
+        <Link href="/admin">
           <a>
             <img src="/logo.png" />
           </a>
@@ -37,7 +37,7 @@ export default function AdminHeader() {
             <ul className="menu">
               <li className="active">
                 <Link href="/admin">
-                  <a>PROJECTS</a>
+                  <a>HOME</a>
                 </Link>
               </li>
             </ul>

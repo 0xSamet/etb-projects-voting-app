@@ -30,7 +30,7 @@ import Web3 from "web3";
 import Token from "../../lib/ETBToken.json";
 import BigNumber from "bignumber.js";
 
-export default function ProjectDetail() {
+export default function PollDetail() {
   const router = useRouter();
   const alert = useAlert();
   const [emptyPieChartData] = useState({
@@ -44,15 +44,15 @@ export default function ProjectDetail() {
       },
     ],
   });
-  const [project, setProject] = useState({
+  const [poll, setPoll] = useState({
     loading: true,
     name: "",
     description: "",
     start_date: new Date(),
     end_date: new Date(),
-    participants: [],
+    proposals: [],
     pieChartData: { ...emptyPieChartData },
-    selectedParticipant: null,
+    selectedProposal: null,
     alreadyVoted: [],
     walletConnectSign: {
       signature: "",
@@ -75,21 +75,18 @@ export default function ProjectDetail() {
       show: false,
     },
   });
-  const [
-    isUserAlreadyVoteThisProject,
-    setIsUserAlreadyVoteThisProject,
-  ] = useState(false);
-  const [alreadyVotedLoading, setAlreadyVotedLoading] = useState(false);
-  const [participantsColorPropAdded, setParticipantsColorPropAdded] = useState(
+  const [isUserAlreadyVoteThisPoll, setIsUserAlreadyVoteThisPoll] = useState(
     false
   );
+  const [alreadyVotedLoading, setAlreadyVotedLoading] = useState(false);
+  const [proposalsColorPropAdded, setProposalsColorPropAdded] = useState(false);
   const state = useSelector((state) => state);
   const { walletConnect } = useWalletConnectContext();
   const dispatch = useDispatch();
 
   const lastVoteSprings = useSprings(
-    project.alreadyVoted.length,
-    project.alreadyVoted.map((person) => ({
+    poll.alreadyVoted.length,
+    poll.alreadyVoted.map((person) => ({
       from: { opacity: 0, x: 100 },
       to: { opacity: 1, x: 0 },
       onStart: function (a) {
@@ -113,28 +110,28 @@ export default function ProjectDetail() {
   }, []);
 
   const checkUserAlreadyVoted = () => {
-    if (state.user.loggedIn && project) {
-      let isUserAlreadyVoteThisProject = false;
+    if (state.user.loggedIn && poll) {
+      let isUserAlreadyVoteThisPoll = false;
       if (state.user.loggedIn) {
-        const tryFind = project.alreadyVoted.find(
+        const tryFind = poll.alreadyVoted.find(
           (vote) => vote.wallet === state.user.wallet.toLocaleLowerCase()
         );
         if (tryFind) {
-          isUserAlreadyVoteThisProject = tryFind.participantId;
+          isUserAlreadyVoteThisPoll = tryFind.proposalId;
         }
-        setIsUserAlreadyVoteThisProject(isUserAlreadyVoteThisProject);
+        setIsUserAlreadyVoteThisPoll(isUserAlreadyVoteThisPoll);
       }
     } else {
-      setIsUserAlreadyVoteThisProject(false);
+      setIsUserAlreadyVoteThisPoll(false);
     }
   };
 
   const refreshAlreadyVoted = async () => {
-    if (router.query.projectId) {
+    if (router.query.pollId) {
       try {
         setAlreadyVotedLoading(true);
-        const response = await axios(`/api/projects/${router.query.projectId}`);
-        await updateProjectWithTheGivenProject(response);
+        const response = await axios(`/api/polls/${router.query.pollId}`);
+        await updatePollWithTheGivenPoll(response);
       } catch (e) {
         if (e.response && e.response.data && e.response.data.message) {
           return alert.error(e.response.data.message);
@@ -144,19 +141,17 @@ export default function ProjectDetail() {
     }
   };
 
-  const updateProjectWithTheGivenProject = async (response) => {
+  const updatePollWithTheGivenPoll = async (response) => {
     try {
       const totalSupply = 1000000;
-      const response = await axios(`/api/projects/${router.query.projectId}`);
-      if (response && response.data && response.data.project) {
-        let participantsUpdate;
+      const response = await axios(`/api/polls/${router.query.pollId}`);
+      if (response && response.data && response.data.poll) {
+        let proposalsUpdate;
 
-        if (participantsColorPropAdded) {
-          participantsUpdate = response.data.project.participants.map((p) => {
-            const participantId = p._id;
-            const tryFind = project.participants.find(
-              (p) => p._id === participantId
-            );
+        if (proposalsColorPropAdded) {
+          proposalsUpdate = response.data.poll.proposals.map((p) => {
+            const proposalId = p._id;
+            const tryFind = poll.proposals.find((p) => p._id === proposalId);
             if (tryFind) {
               return {
                 ...p,
@@ -180,11 +175,11 @@ export default function ProjectDetail() {
             }
           });
         } else {
-          participantsUpdate = response.data.project.participants;
+          proposalsUpdate = response.data.poll.proposals;
         }
 
-        if (!participantsColorPropAdded) {
-          participantsUpdate = participantsUpdate.map((p) => {
+        if (!proposalsColorPropAdded) {
+          proposalsUpdate = proposalsUpdate.map((p) => {
             const borderColor = randomColor({
               format: "rgba",
               alpha: 1,
@@ -200,24 +195,22 @@ export default function ProjectDetail() {
               },
             };
           });
-          setParticipantsColorPropAdded(true);
+          setProposalsColorPropAdded(true);
         }
 
-        const totalTokenVoted = response.data.project.participants
+        const totalTokenVoted = response.data.poll.proposals
           .map((p) => p.voteCount)
           .reduce((a, b) => BigNumber(a).plus(b).toFixed(), "0");
 
-        console.log(totalTokenVoted);
-
         if (totalTokenVoted == 0) {
-          participantsUpdate = participantsUpdate.map((p) => {
+          proposalsUpdate = proposalsUpdate.map((p) => {
             return {
               ...p,
               votePercentage: "0",
             };
           });
         } else {
-          participantsUpdate = participantsUpdate.map((p) => {
+          proposalsUpdate = proposalsUpdate.map((p) => {
             const votePercentageNumber = BigNumber(p.voteCount)
               .dividedBy(totalTokenVoted)
               .multipliedBy(100)
@@ -237,25 +230,25 @@ export default function ProjectDetail() {
 
         const currentDate = new Date().getTime();
 
-        setProject({
-          ...project,
-          ...response.data.project,
+        setPoll({
+          ...poll,
+          ...response.data.poll,
           loading: false,
-          participants: participantsUpdate,
+          proposals: proposalsUpdate,
           pieChartData: {
             ...emptyPieChartData,
-            labels: participantsUpdate.map((p) => p.author),
+            labels: proposalsUpdate.map((p) => p.text),
             datasets: [
               {
                 ...emptyPieChartData.datasets[0],
-                data: participantsUpdate.map((p) => Number(p.voteCount)),
-                backgroundColor: participantsUpdate.map((p) => p.color.bg),
-                borderColor: participantsUpdate.map((p) => p.color.border),
+                data: proposalsUpdate.map((p) => Number(p.voteCount)),
+                backgroundColor: proposalsUpdate.map((p) => p.color.bg),
+                borderColor: proposalsUpdate.map((p) => p.color.border),
               },
             ],
           },
-          isVotingStarted: currentDate - project.start_date > 0,
-          isVotingEnded: project.end_date - currentDate < 0,
+          isVotingStarted: currentDate - poll.start_date > 0,
+          isVotingEnded: poll.end_date - currentDate < 0,
         });
         setAlreadyVotedLoading(false);
       }
@@ -272,13 +265,13 @@ export default function ProjectDetail() {
 
   useEffect(() => {
     checkUserAlreadyVoted();
-  }, [state.user.loggedIn, project]);
+  }, [state.user.loggedIn, poll]);
 
   useEffect(async () => {
-    if (router.query.projectId) {
+    if (router.query.pollId) {
       try {
-        const response = await axios(`/api/projects/${router.query.projectId}`);
-        await updateProjectWithTheGivenProject(response);
+        const response = await axios(`/api/polls/${router.query.pollId}`);
+        await updatePollWithTheGivenPoll(response);
       } catch (e) {
         if (e.response && e.response.status === 404) {
           return router.push("/");
@@ -289,7 +282,7 @@ export default function ProjectDetail() {
         return alert.error(e.message);
       }
     }
-  }, [router.query.projectId]);
+  }, [router.query.pollId]);
 
   const signAndUpdateState = async () => {
     if (!state.user.loggedIn) {
@@ -298,8 +291,8 @@ export default function ProjectDetail() {
     }
 
     const messageToSign = JSON.stringify({
-      projectId: router.query.projectId,
-      participantId: project.participants[project.selectedParticipant]._id,
+      pollId: router.query.pollId,
+      proposalId: poll.proposals[poll.selectedProposal]._id,
     });
 
     const msgParams = [
@@ -323,10 +316,10 @@ export default function ProjectDetail() {
             recovered.toLocaleLowerCase() ===
             state.user.wallet.toLocaleLowerCase()
           ) {
-            return setProject({
-              ...project,
+            return setPoll({
+              ...poll,
               walletConnectSign: {
-                ...project.walletConnectSign,
+                ...poll.walletConnectSign,
                 signature: result,
                 signedMessage: messageToSign,
               },
@@ -391,10 +384,10 @@ export default function ProjectDetail() {
             recovered.toLocaleLowerCase() ===
             state.user.wallet.toLocaleLowerCase()
           ) {
-            return setProject({
-              ...project,
+            return setPoll({
+              ...poll,
               metamaskSign: {
-                ...project.metamaskSign,
+                ...poll.metamaskSign,
                 signature: result.result,
                 signedMessage: messageToSign,
               },
@@ -425,19 +418,19 @@ export default function ProjectDetail() {
   }, [modals[1].confirmed]);
 
   useEffect(async () => {
-    if (project.walletConnectSign.signature) {
-      if (router.query && router.query.projectId) {
+    if (poll.walletConnectSign.signature) {
+      if (router.query && router.query.pollId) {
         try {
           const response = await axios.post(
-            `/api/projects/${router.query.projectId}/vote`,
+            `/api/polls/${router.query.pollId}/vote`,
             {
-              signature: project.walletConnectSign.signature,
-              signedMessage: project.walletConnectSign.signedMessage,
+              signature: poll.walletConnectSign.signature,
+              signedMessage: poll.walletConnectSign.signedMessage,
               wallet: state.user.wallet,
             }
           );
 
-          await updateProjectWithTheGivenProject(response);
+          await updatePollWithTheGivenPoll(response);
           setModals({
             ...modals,
             1: {
@@ -450,10 +443,10 @@ export default function ProjectDetail() {
             },
           });
         } catch (e) {
-          setProject({
-            ...project,
+          setPoll({
+            ...poll,
             walletConnectSign: {
-              ...project.walletConnectSign,
+              ...poll.walletConnectSign,
               signature: "",
               signedMessage: "",
             },
@@ -475,22 +468,22 @@ export default function ProjectDetail() {
         router.push("/");
       }
     }
-  }, [project.walletConnectSign.signature]);
+  }, [poll.walletConnectSign.signature]);
 
   useEffect(async () => {
-    if (project.metamaskSign.signature) {
-      if (router.query && router.query.projectId) {
+    if (poll.metamaskSign.signature) {
+      if (router.query && router.query.pollId) {
         try {
           const response = await axios.post(
-            `/api/projects/${router.query.projectId}/vote`,
+            `/api/polls/${router.query.pollId}/vote`,
             {
-              signature: project.metamaskSign.signature,
-              signedMessage: project.metamaskSign.signedMessage,
+              signature: poll.metamaskSign.signature,
+              signedMessage: poll.metamaskSign.signedMessage,
               wallet: state.user.wallet,
             }
           );
 
-          await updateProjectWithTheGivenProject(response);
+          await updatePollWithTheGivenPoll(response);
           setModals({
             ...modals,
             1: {
@@ -503,10 +496,10 @@ export default function ProjectDetail() {
             },
           });
         } catch (e) {
-          setProject({
-            ...project,
+          setPoll({
+            ...poll,
             metamaskSign: {
-              ...project.metamaskSign,
+              ...poll.metamaskSign,
               signature: "",
               signedMessage: "",
             },
@@ -528,10 +521,10 @@ export default function ProjectDetail() {
         router.push("/");
       }
     }
-  }, [project.metamaskSign.signature]);
+  }, [poll.metamaskSign.signature]);
 
   const onClickVoteBtn = async () => {
-    if (!project.selectedParticipant && project.selectedParticipant !== 0) {
+    if (!poll.selectedProposal && poll.selectedProposal !== 0) {
       return alert.error("Please make o choice!");
     }
     if (!modals[1].confirmed && !modals[2].confirmed) {
@@ -549,20 +542,20 @@ export default function ProjectDetail() {
     }
   };
 
-  const pieChartMemo = useMemo(() => <Pie data={project.pieChartData} />, [
-    project.participants,
+  const pieChartMemo = useMemo(() => <Pie data={poll.pieChartData} />, [
+    poll.proposals,
   ]);
 
   const renderVotingHeader = useMemo(() => {
-    if (project.isVotingStarted && !project.isVotingEnded) {
-      return "Vote This Project";
+    if (poll.isVotingStarted && !poll.isVotingEnded) {
+      return "Vote This Poll";
     }
     return "Results";
   }, []);
 
   return (
     <div className="project-page">
-      {project.loading ? (
+      {poll.loading ? (
         <Dimmer active inverted>
           <Loader size="medium">Loading</Loader>
         </Dimmer>
@@ -570,11 +563,11 @@ export default function ProjectDetail() {
         <>
           <div className="project-detail">
             <Header as="h1" className="projects-title">
-              {project.name}
+              {poll.name}
             </Header>
             <Divider />
             <div className="project-description">
-              <EditorView description={project.description} />
+              <EditorView description={poll.description} />
             </div>
           </div>
           <div
@@ -586,9 +579,9 @@ export default function ProjectDetail() {
             <Header as="h3" className="options-title">
               {renderVotingHeader}
             </Header>
-            {project.participants.length > 0 ? (
+            {poll.proposals.length > 0 ? (
               <>
-                {project.participants.map((p, index) => {
+                {poll.proposals.map((p, index) => {
                   // let isChecked = false;
 
                   // if (project.isUserAlreadyVoteThisProject) {
@@ -600,7 +593,7 @@ export default function ProjectDetail() {
                       className="option"
                       key={p._id}
                       onClick={() =>
-                        setProject({ ...project, selectedParticipant: index })
+                        setPoll({ ...poll, selectedProposal: index })
                       }
                     >
                       <Segment
@@ -610,23 +603,14 @@ export default function ProjectDetail() {
                         }}
                       >
                         <div className="option-left">
-                          {isUserAlreadyVoteThisProject ||
-                          project.isVotingEnded ||
-                          !project.isVotingStarted ? null : (
-                            <Radio
-                              checked={project.selectedParticipant === index}
-                            />
+                          {isUserAlreadyVoteThisPoll ||
+                          poll.isVotingEnded ||
+                          !poll.isVotingStarted ? null : (
+                            <Radio checked={poll.selectedProposal === index} />
                           )}
                         </div>
                         <div className="option-right">
-                          <div className="option-right-top">
-                            <span className="bolder">Author: </span>
-                            <span>{p.author}</span>
-                          </div>
-                          <div className="option-right-bottom">
-                            <span className="bolder">Source: </span>
-                            <span>{p.source}</span>
-                          </div>
+                          <span>{p.text}</span>
                         </div>
                         <div
                           className="option-bg"
@@ -636,8 +620,8 @@ export default function ProjectDetail() {
                           }}
                         ></div>
                         <div className="option-votePercent">{`${p.votePercentage}%`}</div>
-                        {isUserAlreadyVoteThisProject &&
-                          isUserAlreadyVoteThisProject == p._id && (
+                        {isUserAlreadyVoteThisPoll &&
+                          isUserAlreadyVoteThisPoll == p._id && (
                             <div className="option-checked">
                               <svg viewBox="0 0 507.2 507.2">
                                 <circle
@@ -661,9 +645,9 @@ export default function ProjectDetail() {
                     </div>
                   );
                 })}
-                {isUserAlreadyVoteThisProject ||
-                project.isVotingEnded ||
-                !project.isVotingStarted ? null : (
+                {isUserAlreadyVoteThisPoll ||
+                poll.isVotingEnded ||
+                !poll.isVotingStarted ? null : (
                   <div className="submit-vote-row">
                     <Button onClick={onClickVoteBtn} primary>
                       Submit
@@ -672,9 +656,7 @@ export default function ProjectDetail() {
                 )}
               </>
             ) : (
-              <Header as="h4">
-                There is no participant for this project yet
-              </Header>
+              <Header as="h4">No proposals found for this poll yet</Header>
             )}
 
             <div className="vote-need-login-wrapper">
@@ -701,9 +683,9 @@ export default function ProjectDetail() {
             {lastVoteSprings.length > 0 ? (
               <Feed>
                 {lastVoteSprings.map((styles, i, b) => {
-                  const voted = project.alreadyVoted[i];
-                  const findParticipant = project.participants.find(
-                    (p) => p._id === voted.participantId
+                  const voted = poll.alreadyVoted[i];
+                  const findProposal = poll.proposals.find(
+                    (p) => p._id === voted.proposalId
                   );
                   const dateFormat = moment(Number(voted.vote_date)).fromNow();
 
@@ -733,7 +715,7 @@ export default function ProjectDetail() {
                 })}
               </Feed>
             ) : (
-              <Header as="h4">No one vote this project yet</Header>
+              <Header as="h4">No one vote this poll yet</Header>
             )}
           </div>
           <div className="sticky-wrapper-outside">
@@ -743,18 +725,15 @@ export default function ProjectDetail() {
                 <span className="date-title">START</span>
                 <span className="date-content">
                   <span className="top">
-                    {new Date(Number(project.start_date)).toLocaleDateString()}
+                    {new Date(Number(poll.start_date)).toLocaleDateString()}
                   </span>
                   <span className="bottom">
                     {" "}
-                    {new Date(Number(project.start_date)).toLocaleString(
-                      "en-US",
-                      {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      }
-                    )}
+                    {new Date(Number(poll.start_date)).toLocaleString("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}
                   </span>
                 </span>
               </div>
@@ -762,17 +741,14 @@ export default function ProjectDetail() {
                 <span className="date-title">END</span>
                 <span className="date-content">
                   <span className="top">
-                    {new Date(Number(project.end_date)).toLocaleDateString()}
+                    {new Date(Number(poll.end_date)).toLocaleDateString()}
                   </span>
                   <span className="bottom">
-                    {new Date(Number(project.end_date)).toLocaleString(
-                      "en-US",
-                      {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      }
-                    )}
+                    {new Date(Number(poll.end_date)).toLocaleString("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}
                   </span>
                 </span>
               </div>
