@@ -39,6 +39,12 @@ export default function AdminUpdatePoll() {
   const alert = useAlert();
 
   useEffect(() => {
+    if (!state.admin.loggedIn) {
+      router.push("/admin");
+    }
+  }, [state.admin.loggedIn]);
+
+  useEffect(() => {
     if (router.query.pollId) {
       //console.log(router.query);
       const getPoll = async () => {
@@ -266,33 +272,35 @@ export default function AdminUpdatePoll() {
 
   return (
     <div className="admin-update-poll-page">
-      <Form>
-        {pollInputs.loading ? (
-          <Dimmer active inverted style={{ minHeight: 300 }}>
-            <Loader size="medium">Loading</Loader>
-          </Dimmer>
-        ) : (
-          <>
-            <Tab
-              className="tabs update-poll-tabs"
-              menu={{ pointing: true }}
-              panes={panes}
-            />
-            <Button
-              className="big-button"
-              type="submit"
-              fluid
-              icon
-              size="small"
-              color="blue"
-              onClick={submitForm}
-            >
-              <Icon name="save" />
-              Edit Poll
-            </Button>
-          </>
-        )}
-      </Form>
+      {state.admin.loggedIn && (
+        <Form>
+          {pollInputs.loading ? (
+            <Dimmer active inverted style={{ minHeight: 300 }}>
+              <Loader size="medium">Loading</Loader>
+            </Dimmer>
+          ) : (
+            <>
+              <Tab
+                className="tabs update-poll-tabs"
+                menu={{ pointing: true }}
+                panes={panes}
+              />
+              <Button
+                className="big-button"
+                type="submit"
+                fluid
+                icon
+                size="small"
+                color="blue"
+                onClick={submitForm}
+              >
+                <Icon name="save" />
+                Edit Poll
+              </Button>
+            </>
+          )}
+        </Form>
+      )}
     </div>
   );
 }

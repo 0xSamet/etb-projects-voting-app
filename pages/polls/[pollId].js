@@ -26,9 +26,8 @@ import { userLoginSuccess, userLogout } from "../../store";
 import { recoverPersonalSignature } from "eth-sig-util";
 import { useSpring, useSprings, animated } from "react-spring";
 import moment from "moment";
-import Web3 from "web3";
-import Token from "../../lib/ETBToken.json";
 import BigNumber from "bignumber.js";
+import Countdown from "react-countdown";
 
 export default function PollDetail() {
   const router = useRouter();
@@ -143,8 +142,6 @@ export default function PollDetail() {
 
   const updatePollWithTheGivenPoll = async (response) => {
     try {
-      const totalSupply = 1000000;
-      const response = await axios(`/api/polls/${router.query.pollId}`);
       if (response && response.data && response.data.poll) {
         let proposalsUpdate;
 
@@ -229,6 +226,8 @@ export default function PollDetail() {
         }
 
         const currentDate = new Date().getTime();
+        const startDate = response.data.poll.start_date;
+        const endDate = response.data.poll.end_date;
 
         setPoll({
           ...poll,
@@ -237,7 +236,7 @@ export default function PollDetail() {
           proposals: proposalsUpdate,
           pieChartData: {
             ...emptyPieChartData,
-            labels: proposalsUpdate.map((p) => p.text),
+            // labels: proposalsUpdate.map((p) => p.text),
             datasets: [
               {
                 ...emptyPieChartData.datasets[0],
@@ -247,8 +246,8 @@ export default function PollDetail() {
               },
             ],
           },
-          isVotingStarted: currentDate - poll.start_date > 0,
-          isVotingEnded: poll.end_date - currentDate < 0,
+          isVotingStarted: currentDate - startDate > 0,
+          isVotingEnded: endDate - currentDate < 0,
         });
         setAlreadyVotedLoading(false);
       }
@@ -542,9 +541,72 @@ export default function PollDetail() {
     }
   };
 
-  const pieChartMemo = useMemo(() => <Pie data={poll.pieChartData} />, [
-    poll.proposals,
-  ]);
+  const countDownRenderer = ({ hours, minutes, seconds, days }) => {
+    const formatStr = (number) => {
+      const toStr = String(number);
+      return toStr.length === 1 ? `0${toStr}` : toStr;
+    };
+    // console.log(hours, days, formatStr(hours));
+    return (
+      <p>
+        {formatStr(days)}:{formatStr(hours)}:{formatStr(minutes)}:
+        {formatStr(seconds)}
+      </p>
+    );
+  };
+
+  const renderCountDown = () => {
+    if (poll.isVotingEnded) {
+      return (
+        <>
+          <span className="date-title">VOTING ENDED</span>
+          <span className="date-content">
+            <p>{moment(Number(poll.end_date)).format("L hh:mm A")}</p>
+          </span>
+        </>
+      );
+    }
+
+    if (poll.isVotingStarted) {
+      return (
+        <>
+          <span className="date-title">VOTING ENDS IN</span>
+          <span className="date-content">
+            <Countdown
+              date={Number(poll.end_date)}
+              renderer={countDownRenderer}
+              onComplete={() => refreshAlreadyVoted()}
+            />
+          </span>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <span className="date-title">VOTING STARTS IN</span>
+        <span className="date-content">
+          <Countdown
+            date={Number(poll.start_date)}
+            renderer={countDownRenderer}
+            onComplete={() => refreshAlreadyVoted()}
+          />
+        </span>
+      </>
+    );
+  };
+
+  const pieChartMemo = useMemo(() => {
+    const totalTokenVoted = poll.proposals
+      .map((p) => p.voteCount)
+      .reduce((a, b) => BigNumber(a).plus(b).toFixed(), "0");
+
+    if (totalTokenVoted == 0) {
+      return <Header as="h3">There is No Vote</Header>;
+    } else {
+      return <Pie data={poll.pieChartData} width={200} height={200} />;
+    }
+  }, [poll.proposals]);
 
   const renderVotingHeader = useMemo(() => {
     if (poll.isVotingStarted && !poll.isVotingEnded) {
@@ -582,12 +644,6 @@ export default function PollDetail() {
             {poll.proposals.length > 0 ? (
               <>
                 {poll.proposals.map((p, index) => {
-                  // let isChecked = false;
-
-                  // if (project.isUserAlreadyVoteThisProject) {
-                  //   const tryFind =
-                  // }
-
                   return (
                     <div
                       className="option"
@@ -695,18 +751,17 @@ export default function PollDetail() {
                       className="ui event"
                       style={{
                         ...styles,
-                        backgroundColor: findParticipant.color.bg,
+                        backgroundColor: findProposal.color.bg,
                       }}
                       key={"vote-key-" + i}
                     >
                       <Feed.Content
                       // style={{
-                      //   backgroundColor: findParticipant.color.bg,
+                      //   backgroundColor: findProposal.color.bg,
                       // }}
                       >
                         <Feed.Date>{dateFormat}</Feed.Date>
                         <span className="feed-wallet">{voted.wallet}</span>
-                        {`  Voted For ${findParticipant.author}`}
                         <Divider />
                         <p>{`Have ${voted.tokenHave} ETB Tokens`}</p>
                       </Feed.Content>
@@ -721,37 +776,7 @@ export default function PollDetail() {
           <div className="sticky-wrapper-outside">
             <div className="chart">{pieChartMemo}</div>
             <div className="dates">
-              <div className="date">
-                <span className="date-title">START</span>
-                <span className="date-content">
-                  <span className="top">
-                    {new Date(Number(poll.start_date)).toLocaleDateString()}
-                  </span>
-                  <span className="bottom">
-                    {" "}
-                    {new Date(Number(poll.start_date)).toLocaleString("en-US", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: true,
-                    })}
-                  </span>
-                </span>
-              </div>
-              <div className="date">
-                <span className="date-title">END</span>
-                <span className="date-content">
-                  <span className="top">
-                    {new Date(Number(poll.end_date)).toLocaleDateString()}
-                  </span>
-                  <span className="bottom">
-                    {new Date(Number(poll.end_date)).toLocaleString("en-US", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: true,
-                    })}
-                  </span>
-                </span>
-              </div>
+              <div className="date">{renderCountDown()}</div>
             </div>
           </div>
           <Modal

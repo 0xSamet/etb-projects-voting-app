@@ -224,6 +224,7 @@ a {
       }
       .projects {
         position: relative;
+
         .project {
           display: flex;
           flex: 0 0 50%;
@@ -300,16 +301,10 @@ a {
                 padding: 0.78571429em 0.46em 0.78571429em;
                 text-align: center;
                 position: relative;
-                &:after {
-                  content: "";
-                  position: absolute;
-                  top: 50%;
-                  left: 50%;
-                  transform: translate(-50%, -50%);
-                  width: 0.1px;
-                  height: 57%;
-                  background: #e0e1e2;
-                }
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+
                 h5 {
                   font-size: 11px;
                   margin: 0px 0px 2px 0px;
@@ -318,10 +313,6 @@ a {
                 p {
                   font-size: 10px;
                 }
-                .project-button-left,
-                .project-button-right {
-                  padding: 0px 0.78571429em;
-                }
               }
             }
           }
@@ -329,6 +320,7 @@ a {
       }
       .polls {
         position: relative;
+
         .poll {
           display: flex;
 
@@ -373,16 +365,10 @@ a {
                 padding: 0.78571429em 0.46em 0.78571429em;
                 text-align: center;
                 position: relative;
-                &:after {
-                  content: "";
-                  position: absolute;
-                  top: 50%;
-                  left: 50%;
-                  transform: translate(-50%, -50%);
-                  width: 0.1px;
-                  height: 57%;
-                  background: #e0e1e2;
-                }
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+
                 h5 {
                   font-size: 11px;
                   margin: 0px 0px 2px 0px;
@@ -444,6 +430,7 @@ a {
           }
           .option-right {
             padding-left: 15px;
+            padding-right: 100px;
             span {
               font-weight: 600;
               &.bolder {
@@ -597,9 +584,13 @@ a {
         .chart {
           position: sticky;
           top: 10px;
+          min-height: 400px;
           margin-top: 75px;
           box-shadow: 0px 1px 5px 0px rgb(143 143 143 / 20%);
           border-radius: 0.28571429rem;
+          display: flex;
+          justify-content: center;
+          align-items: center;
         }
         canvas {
           padding: 5px;
@@ -610,6 +601,8 @@ a {
           top: 425px;
           box-shadow: 0px 1px 5px 0px rgb(143 143 143 / 20%);
           display: flex;
+          justify-content: center;
+          align-items: center;
           border-radius: 0.28571429rem;
           .date {
             display: flex;
@@ -623,29 +616,8 @@ a {
               font-size: 14px;
             }
             .date-content {
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-              align-items: center;
               padding-top: 3px;
-              .top {
-                font-size: 13px;
-              }
-              .bottom {
-                font-size: 12px;
-              }
             }
-          }
-          &::after {
-            content: "";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            -webkit-transform: translate(-50%, -50%);
-            transform: translate(-50%, -50%);
-            width: 0.1px;
-            height: 57%;
-            background: #e0e1e2;
           }
         }
       }

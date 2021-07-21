@@ -40,6 +40,12 @@ export default function AdminAddProject() {
   const alert = useAlert();
 
   useEffect(() => {
+    if (!state.admin.loggedIn) {
+      router.push("/admin");
+    }
+  }, [state.admin.loggedIn]);
+
+  useEffect(() => {
     if (router.query.projectId) {
       //console.log(router.query);
       const getProject = async () => {
@@ -310,44 +316,35 @@ export default function AdminAddProject() {
 
   return (
     <div className="admin-update-project-page">
-      <Form>
-        {projectInputs.loading ? (
-          <Dimmer active inverted style={{ minHeight: 300 }}>
-            <Loader size="medium">Loading</Loader>
-          </Dimmer>
-        ) : (
-          <>
-            <Tab
-              className="tabs update-project-tabs"
-              menu={{ pointing: true }}
-              panes={panes}
-            />
-            <Button
-              className="big-button"
-              type="submit"
-              fluid
-              icon
-              size="small"
-              color="blue"
-              onClick={submitForm}
-            >
-              <Icon name="save" />
-              Edit Project
-            </Button>
-          </>
-        )}
-      </Form>
+      {state.admin.loggedIn && (
+        <Form>
+          {projectInputs.loading ? (
+            <Dimmer active inverted style={{ minHeight: 300 }}>
+              <Loader size="medium">Loading</Loader>
+            </Dimmer>
+          ) : (
+            <>
+              <Tab
+                className="tabs update-project-tabs"
+                menu={{ pointing: true }}
+                panes={panes}
+              />
+              <Button
+                className="big-button"
+                type="submit"
+                fluid
+                icon
+                size="small"
+                color="blue"
+                onClick={submitForm}
+              >
+                <Icon name="save" />
+                Edit Project
+              </Button>
+            </>
+          )}
+        </Form>
+      )}
     </div>
   );
 }
-
-// EditorState.createWithContent(
-//           convertFromRaw(JSON.parse(this.props.defaultState))
-//        )
-
-/*      const raw = convertToRaw(editorState.getCurrentContent());
-      this.setState({ editorState });
-      this.props.setProjectInputs({
-        ...this.props.projectInputs,
-        description: JSON.stringify(raw),
-      });*/

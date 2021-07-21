@@ -21,6 +21,10 @@ import { useDispatch } from "react-redux";
 import { useRouter } from "next/router";
 import clsx from "clsx";
 import { animated, useSpring } from "react-spring";
+import produce from "immer";
+import moment from "moment";
+import numeral from "numeral";
+import Countdown from "react-countdown";
 
 export default function Home() {
   const [projects, setProjects] = useState({
@@ -39,6 +43,7 @@ export default function Home() {
       pollsPerPage: 5,
     },
   });
+
   const alert = useAlert();
   const { walletConnect } = useWalletConnectContext();
   const dispatch = useDispatch();
@@ -71,16 +76,17 @@ export default function Home() {
     getProjects();
     getPolls();
 
-    router.events.on("routeChangeComplete", getProjectsOnIconClick);
+    router.events.on("routeChangeComplete", getProjectsAndPollsOnIconClick);
 
     return () => {
-      router.events.off("routeChangeComplete", getProjectsOnIconClick);
+      router.events.off("routeChangeComplete", getProjectsAndPollsOnIconClick);
     };
   }, []);
 
-  const getProjectsOnIconClick = (path) => {
+  const getProjectsAndPollsOnIconClick = (path) => {
     if (path === "/") {
-      return getProjects();
+      getProjects();
+      return getPolls();
     }
   };
 
@@ -99,16 +105,22 @@ export default function Home() {
           loading: false,
           data: response.data.projects
             .sort((a, b) => a.sort_order - b.sort_order)
-            .map((project) => {
+            .map((project, i) => {
               let formatDescription = project.short_description;
 
               if (formatDescription.length > 600) {
                 formatDescription = formatDescription.substr(0, 600);
               }
 
+              const currentDate = new Date().getTime();
+              const isVotingStarted = currentDate - project.start_date > 0;
+              const isVotingEnded = project.end_date - currentDate < 0;
+
               return {
                 ...project,
                 short_description: formatDescription,
+                isVotingStarted,
+                isVotingEnded,
               };
             }),
         });
@@ -138,7 +150,19 @@ export default function Home() {
         setPolls({
           ...polls,
           loading: false,
-          data: response.data.polls.sort((a, b) => a.sort_order - b.sort_order),
+          data: response.data.polls
+            .sort((a, b) => a.sort_order - b.sort_order)
+            .map((poll, i) => {
+              const currentDate = new Date().getTime();
+              const isVotingStarted = currentDate - poll.start_date > 0;
+              const isVotingEnded = poll.end_date - currentDate < 0;
+
+              return {
+                ...poll,
+                isVotingStarted,
+                isVotingEnded,
+              };
+            }),
         });
       }
     } catch (e) {
@@ -164,9 +188,12 @@ export default function Home() {
 
     if (projects.loading) {
       return (
-        <Dimmer active inverted style={{ minHeight: 300 }}>
-          <Loader size="medium">Loading</Loader>
-        </Dimmer>
+        <>
+          <div style={{ minHeight: 500 }}></div>
+          <Dimmer active inverted style={{ minHeight: 500 }}>
+            <Loader size="medium">Loading</Loader>
+          </Dimmer>
+        </>
       );
     }
     if (projects.data && projects.data.length === 0) {
@@ -176,8 +203,58 @@ export default function Home() {
         </div>
       );
     }
+
+    const renderer = ({ hours, minutes, seconds, days }) => {
+      const formatStr = (number) => {
+        const toStr = String(number);
+        return toStr.length === 1 ? `0${toStr}` : toStr;
+      };
+      // console.log(hours, days, formatStr(hours));
+      return (
+        <p>
+          {formatStr(days)}:{formatStr(hours)}:{formatStr(minutes)}:
+          {formatStr(seconds)}
+        </p>
+      );
+    };
+
     if (projects.data && projects.data.length > 0) {
-      return currentProjects.map((project) => {
+      return currentProjects.map((project, projectIndex) => {
+        let topButtonText = "";
+        let topButtonIcon = <Icon name="chart pie" />;
+        let bottomButtonText = "";
+        let countDown = null;
+        let buttonWidth = 167.59;
+
+        if (project.isVotingEnded) {
+          topButtonText = "RESULTS";
+          bottomButtonText = "VOTING ENDED";
+          countDown = (
+            <p>{moment(Number(project.end_date)).format("L hh:mm A")}</p>
+          );
+        } else if (project.isVotingStarted) {
+          topButtonText = "GO TO VOTE";
+          bottomButtonText = "VOTING ENDS IN";
+          countDown = (
+            <Countdown
+              date={Number(project.end_date)}
+              renderer={renderer}
+              onComplete={() => getProjects()}
+            />
+          );
+        } else {
+          topButtonText = "REVIEW";
+          bottomButtonText = "VOTING STARTS IN";
+          countDown = (
+            <Countdown
+              date={Number(project.start_date)}
+              renderer={renderer}
+              onComplete={() => getProjects()}
+            />
+          );
+          topButtonIcon = <Icon name="search" />;
+        }
+
         return (
           <Grid.Column width={8} key={project._id}>
             <div className="project">
@@ -202,31 +279,27 @@ export default function Home() {
                 <div className="card-right-top">
                   <Link href={`/projects/${project._id}`}>
                     <a>
-                      <Button icon loading={false} labelPosition="left">
-                        <Icon name="chart pie" />
-                        GO TO VOTE
+                      <Button
+                        icon
+                        loading={false}
+                        labelPosition="left"
+                        style={{ width: buttonWidth }}
+                      >
+                        {topButtonIcon}
+                        {topButtonText}
                       </Button>
                     </a>
                   </Link>
                 </div>
                 <div className="card-right-bottom">
-                  <div className="project-button">
-                    <div className="project-button-left">
-                      <h5>START </h5>
-                      <p>
-                        {new Date(
-                          Number(project.start_date)
-                        ).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="project-button-right">
-                      <h5>END </h5>
-                      <p>
-                        {new Date(
-                          Number(project.end_date)
-                        ).toLocaleDateString()}
-                      </p>
-                    </div>
+                  <div
+                    className="project-button"
+                    style={{
+                      width: buttonWidth,
+                    }}
+                  >
+                    <h5>{bottomButtonText}</h5>
+                    {countDown}
                   </div>
                 </div>
               </div>
@@ -257,9 +330,12 @@ export default function Home() {
   const renderPolls = useMemo(() => {
     if (polls.loading) {
       return (
-        <Dimmer active inverted style={{ minHeight: 300 }}>
-          <Loader size="medium">Loading</Loader>
-        </Dimmer>
+        <>
+          <div style={{ minHeight: 500 }}></div>
+          <Dimmer active inverted style={{ minHeight: 500 }}>
+            <Loader size="medium">Loading</Loader>
+          </Dimmer>
+        </>
       );
     }
     if (polls.data && polls.data.length === 0) {
@@ -269,8 +345,55 @@ export default function Home() {
         </div>
       );
     }
+    const renderer = ({ hours, minutes, seconds, days }) => {
+      const formatStr = (number) => {
+        const toStr = String(number);
+        return toStr.length === 1 ? `0${toStr}` : toStr;
+      };
+      // console.log(hours, days, formatStr(hours));
+      return (
+        <p>
+          {formatStr(days)}:{formatStr(hours)}:{formatStr(minutes)}:
+          {formatStr(seconds)}
+        </p>
+      );
+    };
     if (polls.data && polls.data.length > 0) {
-      return polls.data.map((poll) => {
+      return polls.data.map((poll, pollIndex) => {
+        let topButtonText = "";
+        let topButtonIcon = <Icon name="chart pie" />;
+        let bottomButtonText = "";
+        let countDown = null;
+        let buttonWidth = 167.59;
+
+        if (poll.isVotingEnded) {
+          topButtonText = "RESULTS";
+          bottomButtonText = "VOTING ENDED";
+          countDown = (
+            <p>{moment(Number(poll.end_date)).format("L hh:mm A")}</p>
+          );
+        } else if (poll.isVotingStarted) {
+          topButtonText = "GO TO VOTE";
+          bottomButtonText = "VOTING ENDS IN";
+          countDown = (
+            <Countdown
+              date={Number(poll.end_date)}
+              renderer={renderer}
+              onComplete={() => getPolls()}
+            />
+          );
+        } else {
+          topButtonText = "REVIEW";
+          bottomButtonText = "VOTING STARTS IN";
+          countDown = (
+            <Countdown
+              date={Number(poll.start_date)}
+              renderer={renderer}
+              onComplete={() => getPolls()}
+            />
+          );
+          topButtonIcon = <Icon name="search" />;
+        }
         return (
           <Grid.Column width={16} key={poll._id}>
             <div className="poll">
@@ -283,27 +406,22 @@ export default function Home() {
                 <div className="card-right-top">
                   <Link href={`/polls/${poll._id}`}>
                     <a>
-                      <Button icon loading={false} labelPosition="left">
-                        <Icon name="chart pie" />
-                        GO TO VOTE
+                      <Button
+                        icon
+                        loading={false}
+                        labelPosition="left"
+                        style={{ width: buttonWidth }}
+                      >
+                        {topButtonIcon}
+                        {topButtonText}
                       </Button>
                     </a>
                   </Link>
                 </div>
                 <div className="card-right-bottom">
-                  <div className="poll-button">
-                    <div className="poll-button-left">
-                      <h5>START </h5>
-                      <p>
-                        {new Date(Number(poll.start_date)).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="poll-button-right">
-                      <h5>END </h5>
-                      <p>
-                        {new Date(Number(poll.end_date)).toLocaleDateString()}
-                      </p>
-                    </div>
+                  <div className="poll-button" style={{ width: buttonWidth }}>
+                    <h5>{bottomButtonText}</h5>
+                    {countDown}
                   </div>
                 </div>
               </div>
@@ -370,8 +488,6 @@ export default function Home() {
           <animated.div
             className="ui padded equal width grid projects"
             style={projectStyles}
-            columns="equal"
-            padded
           >
             {renderProjects}
           </animated.div>
@@ -418,8 +534,6 @@ export default function Home() {
           <animated.div
             className="ui padded equal width grid polls"
             style={pollStyles}
-            columns="equal"
-            padded
           >
             {renderPolls}
           </animated.div>

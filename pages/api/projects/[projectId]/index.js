@@ -102,6 +102,10 @@ export default async (req, res) => {
           projectToUpdate.participants = projectToUpdate.participants.filter(
             (p) => p._id != participantId
           );
+
+          projectToUpdate.alreadyVoted = projectToUpdate.alreadyVoted.filter(
+            (p) => p.participantId != participantId
+          );
           continue;
         }
         if (participantInDb && !participant.deleted) {

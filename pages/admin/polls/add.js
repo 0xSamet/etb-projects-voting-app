@@ -13,7 +13,7 @@ import {
   FormField,
 } from "semantic-ui-react";
 import { useSelector } from "react-redux";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Editor from "../../../components/admin/Editor";
 import produce from "immer";
 import axios from "axios";
@@ -34,6 +34,12 @@ export default function AdminAddPoll() {
   });
   const router = useRouter();
   const alert = useAlert();
+
+  useEffect(() => {
+    if (!state.admin.loggedIn) {
+      router.push("/admin");
+    }
+  }, [state.admin.loggedIn]);
 
   const simpleInputChange = (e) => {
     return setPollInputs({
@@ -223,25 +229,27 @@ export default function AdminAddPoll() {
 
   return (
     <div className="admin-add-poll-page">
-      <Form>
-        <Tab
-          className="tabs add-poll-tabs"
-          menu={{ pointing: true }}
-          panes={panes}
-        />
-        <Button
-          className="big-button"
-          type="submit"
-          fluid
-          icon
-          size="small"
-          color="blue"
-          onClick={submitForm}
-        >
-          <Icon name="add square" />
-          Add Poll
-        </Button>
-      </Form>
+      {state.admin.loggedIn && (
+        <Form>
+          <Tab
+            className="tabs add-poll-tabs"
+            menu={{ pointing: true }}
+            panes={panes}
+          />
+          <Button
+            className="big-button"
+            type="submit"
+            fluid
+            icon
+            size="small"
+            color="blue"
+            onClick={submitForm}
+          >
+            <Icon name="add square" />
+            Add Poll
+          </Button>
+        </Form>
+      )}
     </div>
   );
 }

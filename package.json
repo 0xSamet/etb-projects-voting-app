@@ -33,6 +33,7 @@
     "react": "17.0.2",
     "react-alert": "^7.0.3",
     "react-chartjs-2": "^3.0.3",
+    "react-countdown": "^2.3.2",
     "react-datetime": "^3.0.4",
     "react-datetime-range-picker": "^3.0.0",
     "react-day-picker": "^7.4.10",

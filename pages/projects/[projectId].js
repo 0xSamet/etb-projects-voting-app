@@ -26,9 +26,8 @@ import { userLoginSuccess, userLogout } from "../../store";
 import { recoverPersonalSignature } from "eth-sig-util";
 import { useSpring, useSprings, animated } from "react-spring";
 import moment from "moment";
-import Web3 from "web3";
-import Token from "../../lib/ETBToken.json";
 import BigNumber from "bignumber.js";
+import Countdown from "react-countdown";
 
 export default function ProjectDetail() {
   const router = useRouter();
@@ -146,8 +145,6 @@ export default function ProjectDetail() {
 
   const updateProjectWithTheGivenProject = async (response) => {
     try {
-      const totalSupply = 1000000;
-      const response = await axios(`/api/projects/${router.query.projectId}`);
       if (response && response.data && response.data.project) {
         let participantsUpdate;
 
@@ -207,7 +204,7 @@ export default function ProjectDetail() {
           .map((p) => p.voteCount)
           .reduce((a, b) => BigNumber(a).plus(b).toFixed(), "0");
 
-        console.log(totalTokenVoted);
+        // console.log(totalTokenVoted);
 
         if (totalTokenVoted == 0) {
           participantsUpdate = participantsUpdate.map((p) => {
@@ -236,6 +233,8 @@ export default function ProjectDetail() {
         }
 
         const currentDate = new Date().getTime();
+        const startDate = response.data.project.start_date;
+        const endDate = response.data.project.end_date;
 
         setProject({
           ...project,
@@ -254,8 +253,8 @@ export default function ProjectDetail() {
               },
             ],
           },
-          isVotingStarted: currentDate - project.start_date > 0,
-          isVotingEnded: project.end_date - currentDate < 0,
+          isVotingStarted: currentDate - startDate > 0,
+          isVotingEnded: endDate - currentDate < 0,
         });
         setAlreadyVotedLoading(false);
       }
@@ -549,16 +548,82 @@ export default function ProjectDetail() {
     }
   };
 
-  const pieChartMemo = useMemo(() => <Pie data={project.pieChartData} />, [
-    project.participants,
-  ]);
+  const countDownRenderer = ({ hours, minutes, seconds, days }) => {
+    const formatStr = (number) => {
+      const toStr = String(number);
+      return toStr.length === 1 ? `0${toStr}` : toStr;
+    };
+    // console.log(hours, days, formatStr(hours));
+    return (
+      <p>
+        {formatStr(days)}:{formatStr(hours)}:{formatStr(minutes)}:
+        {formatStr(seconds)}
+      </p>
+    );
+  };
+
+  const pieChartMemo = useMemo(() => {
+    const totalTokenVoted = project.participants
+      .map((p) => p.voteCount)
+      .reduce((a, b) => BigNumber(a).plus(b).toFixed(), "0");
+
+    if (totalTokenVoted == 0) {
+      return <Header as="h3">There is No Vote</Header>;
+    } else {
+      return <Pie data={project.pieChartData} width={200} height={200} />;
+    }
+  }, [project.participants]);
 
   const renderVotingHeader = useMemo(() => {
-    if (project.isVotingStarted && !project.isVotingEnded) {
+    if (project.isVotingEnded) {
+      return "Results";
+    }
+    if (project.isVotingStarted) {
       return "Vote This Project";
     }
-    return "Results";
-  }, []);
+    return "Voting didn't start yet";
+  }, [project]);
+
+  const renderCountDown = () => {
+    if (project.isVotingEnded) {
+      return (
+        <>
+          <span className="date-title">VOTING ENDED</span>
+          <span className="date-content">
+            <p>{moment(Number(project.end_date)).format("L hh:mm A")}</p>
+          </span>
+        </>
+      );
+    }
+
+    if (project.isVotingStarted) {
+      return (
+        <>
+          <span className="date-title">VOTING ENDS IN</span>
+          <span className="date-content">
+            <Countdown
+              date={Number(project.end_date)}
+              renderer={countDownRenderer}
+              onComplete={() => refreshAlreadyVoted()}
+            />
+          </span>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <span className="date-title">VOTING STARTS IN</span>
+        <span className="date-content">
+          <Countdown
+            date={Number(project.start_date)}
+            renderer={countDownRenderer}
+            onComplete={() => refreshAlreadyVoted()}
+          />
+        </span>
+      </>
+    );
+  };
 
   return (
     <div className="project-page">
@@ -589,12 +654,6 @@ export default function ProjectDetail() {
             {project.participants.length > 0 ? (
               <>
                 {project.participants.map((p, index) => {
-                  // let isChecked = false;
-
-                  // if (project.isUserAlreadyVoteThisProject) {
-                  //   const tryFind =
-                  // }
-
                   return (
                     <div
                       className="option"
@@ -739,43 +798,7 @@ export default function ProjectDetail() {
           <div className="sticky-wrapper-outside">
             <div className="chart">{pieChartMemo}</div>
             <div className="dates">
-              <div className="date">
-                <span className="date-title">START</span>
-                <span className="date-content">
-                  <span className="top">
-                    {new Date(Number(project.start_date)).toLocaleDateString()}
-                  </span>
-                  <span className="bottom">
-                    {" "}
-                    {new Date(Number(project.start_date)).toLocaleString(
-                      "en-US",
-                      {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      }
-                    )}
-                  </span>
-                </span>
-              </div>
-              <div className="date">
-                <span className="date-title">END</span>
-                <span className="date-content">
-                  <span className="top">
-                    {new Date(Number(project.end_date)).toLocaleDateString()}
-                  </span>
-                  <span className="bottom">
-                    {new Date(Number(project.end_date)).toLocaleString(
-                      "en-US",
-                      {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      }
-                    )}
-                  </span>
-                </span>
-              </div>
+              <div className="date">{renderCountDown()}</div>
             </div>
           </div>
           <Modal
