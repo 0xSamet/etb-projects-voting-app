@@ -20,7 +20,7 @@ import randomColor from "randomcolor";
 import { useAlert } from "react-alert";
 import { useDispatch, useSelector } from "react-redux";
 import clsx from "clsx";
-import { useWalletConnectContext } from "../../lib/walletConnectContext";
+import { useWalletConnect } from "../../lib/walletConnect";
 import { convertUtf8ToHex } from "@walletconnect/utils";
 import { userLoginSuccess, userLogout } from "../../store";
 import { recoverPersonalSignature } from "eth-sig-util";
@@ -80,7 +80,7 @@ export default function PollDetail() {
   const [alreadyVotedLoading, setAlreadyVotedLoading] = useState(false);
   const [proposalsColorPropAdded, setProposalsColorPropAdded] = useState(false);
   const state = useSelector((state) => state);
-  const { walletConnect } = useWalletConnectContext();
+  const { walletConnect } = useWalletConnect();
   const dispatch = useDispatch();
 
   const lastVoteSprings = useSprings(
@@ -609,26 +609,29 @@ export default function PollDetail() {
   }, [poll.proposals]);
 
   const renderVotingHeader = useMemo(() => {
-    if (poll.isVotingStarted && !poll.isVotingEnded) {
+    if (poll.isVotingEnded || isUserAlreadyVoteThisPoll) {
+      return "Results";
+    }
+    if (poll.isVotingStarted) {
       return "Vote This Poll";
     }
-    return "Results";
-  }, []);
+    return "Voting didn't start yet";
+  }, [poll, isUserAlreadyVoteThisPoll]);
 
   return (
-    <div className="project-page">
+    <div className="detail-page">
       {poll.loading ? (
         <Dimmer active inverted>
           <Loader size="medium">Loading</Loader>
         </Dimmer>
       ) : (
         <>
-          <div className="project-detail">
-            <Header as="h1" className="projects-title">
+          <div className="detail">
+            <Header as="h1" className="detail-title">
               {poll.name}
             </Header>
             <Divider />
-            <div className="project-description">
+            <div className="detail-description">
               <EditorView description={poll.description} />
             </div>
           </div>

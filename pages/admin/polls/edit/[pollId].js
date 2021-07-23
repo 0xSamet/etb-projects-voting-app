@@ -1,16 +1,9 @@
-import Head from "next/head";
-import Link from "next/link";
 import {
   Button,
-  Divider,
-  Header,
   Icon,
-  Grid,
-  Table,
   Tab,
   Form,
   Segment,
-  FormField,
   Loader,
   Dimmer,
 } from "semantic-ui-react";
@@ -24,7 +17,7 @@ import { useAlert } from "react-alert";
 import { EditorState, convertFromRaw, convertToRaw } from "draft-js";
 import ReactDateTime from "react-datetime";
 
-export default function AdminUpdatePoll() {
+export default function AdminEditPoll() {
   const state = useSelector((state) => state);
   const [pollInputs, setPollInputs] = useState({
     loading: true,
@@ -46,7 +39,6 @@ export default function AdminUpdatePoll() {
 
   useEffect(() => {
     if (router.query.pollId) {
-      //console.log(router.query);
       const getPoll = async () => {
         try {
           const response = await axios(`/api/polls/${router.query.pollId}`);
@@ -93,7 +85,8 @@ export default function AdminUpdatePoll() {
     });
   };
 
-  const submitForm = async () => {
+  const submitForm = async (e) => {
+    e.preventDefault();
     if (router.query && router.query.pollId) {
       try {
         const response = await axios.put(`/api/polls/${router.query.pollId}`, {
@@ -271,9 +264,9 @@ export default function AdminUpdatePoll() {
   ];
 
   return (
-    <div className="admin-update-poll-page">
+    <div className="admin-sub-page admin-update-poll-page">
       {state.admin.loggedIn && (
-        <Form>
+        <Form onSubmit={submitForm}>
           {pollInputs.loading ? (
             <Dimmer active inverted style={{ minHeight: 300 }}>
               <Loader size="medium">Loading</Loader>
@@ -281,7 +274,7 @@ export default function AdminUpdatePoll() {
           ) : (
             <>
               <Tab
-                className="tabs update-poll-tabs"
+                className="tabs update-poll-tabs sub-page-tabs"
                 menu={{ pointing: true }}
                 panes={panes}
               />
@@ -292,7 +285,6 @@ export default function AdminUpdatePoll() {
                 icon
                 size="small"
                 color="blue"
-                onClick={submitForm}
               >
                 <Icon name="save" />
                 Edit Poll

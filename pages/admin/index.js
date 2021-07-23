@@ -1,16 +1,12 @@
-import Head from "next/head";
 import Link from "next/link";
 import {
   Button,
   Divider,
   Header,
   Icon,
-  Grid,
   Table,
   Dimmer,
   Loader,
-  Segment,
-  Menu,
   Pagination,
 } from "semantic-ui-react";
 import AdminLoginRegisterForm from "../../components/admin/LoginRegisterForm";
@@ -19,7 +15,6 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useAlert } from "react-alert";
 import { adminLoginSuccess, wrapper } from "../../store";
-import cookie from "cookie";
 import clsx from "clsx";
 import { animated, useSpring } from "react-spring";
 

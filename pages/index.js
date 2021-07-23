@@ -16,7 +16,7 @@ import { useAlert } from "react-alert";
 import EditorView from "../components/EditorView";
 import { convertFromRaw, Editor, EditorState } from "draft-js";
 import { userLoginSuccess, userLogout } from "../store";
-import { useWalletConnectContext } from "../lib/walletConnectContext";
+import { useWalletConnect } from "../lib/walletConnect";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/router";
 import clsx from "clsx";
@@ -25,6 +25,7 @@ import produce from "immer";
 import moment from "moment";
 import numeral from "numeral";
 import Countdown from "react-countdown";
+import useWindowSize from "../hooks/useWindowSize";
 
 export default function Home() {
   const [projects, setProjects] = useState({
@@ -34,6 +35,7 @@ export default function Home() {
       currentPage: 1,
       projectsPerPage: 6,
     },
+    playAnimation: false,
   });
   const [polls, setPolls] = useState({
     loading: true,
@@ -42,24 +44,53 @@ export default function Home() {
       currentPage: 1,
       pollsPerPage: 5,
     },
+    playAnimation: false,
   });
 
   const alert = useAlert();
-  const { walletConnect } = useWalletConnectContext();
+  const { walletConnect } = useWalletConnect();
   const dispatch = useDispatch();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState(0);
+  const windowSize = useWindowSize();
 
   const projectStyles = useSpring({
     from: { x: -100 },
     to: { x: 0 },
-    reset: true,
+    reset: projects.playAnimation,
+    onRest: () => {
+      console.log("b");
+      setProjects({
+        ...projects,
+        playAnimation: false,
+      });
+    },
   });
   const pollStyles = useSpring({
     from: { x: 100 },
     to: { x: 0 },
-    reset: true,
+    reset: polls.playAnimation,
+    onRest: () => {
+      setPolls({
+        ...polls,
+        playAnimation: false,
+      });
+    },
   });
+
+  useEffect(() => {
+    if (activeTab === 0) {
+      setProjects({
+        ...projects,
+        playAnimation: true,
+      });
+    } else {
+      setPolls({
+        ...polls,
+        playAnimation: true,
+      });
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (walletConnect.connected) {
@@ -106,23 +137,17 @@ export default function Home() {
           data: response.data.projects
             .sort((a, b) => a.sort_order - b.sort_order)
             .map((project, i) => {
-              let formatDescription = project.short_description;
-
-              if (formatDescription.length > 600) {
-                formatDescription = formatDescription.substr(0, 600);
-              }
-
               const currentDate = new Date().getTime();
               const isVotingStarted = currentDate - project.start_date > 0;
               const isVotingEnded = project.end_date - currentDate < 0;
 
               return {
                 ...project,
-                short_description: formatDescription,
                 isVotingStarted,
                 isVotingEnded,
               };
             }),
+          playAnimation: true,
         });
       }
     } catch (e) {
@@ -163,6 +188,7 @@ export default function Home() {
                 isVotingEnded,
               };
             }),
+          playAnimation: true,
         });
       }
     } catch (e) {
@@ -225,6 +251,7 @@ export default function Home() {
         let bottomButtonText = "";
         let countDown = null;
         let buttonWidth = 167.59;
+        let shortDescription = project.short_description.slice(0, 599);
 
         if (project.isVotingEnded) {
           topButtonText = "RESULTS";
@@ -255,8 +282,12 @@ export default function Home() {
           topButtonIcon = <Icon name="search" />;
         }
 
+        if (windowSize.width < 600) {
+          buttonWidth = "100%";
+        }
+
         return (
-          <Grid.Column width={8} key={project._id}>
+          <Grid.Column mobile={16} tablet={16} computer={8} key={project._id}>
             <div className="project">
               <div className="card-left">
                 <Header as="h4" className="project-title">
@@ -264,26 +295,27 @@ export default function Home() {
                 </Header>
                 <div className="project-description">
                   <p>
-                    {project.short_description}
-                    {project.short_description.length > 599 && (
+                    {shortDescription}
+                    {/* {project.short_description.length > 599 && (
                       <span className="read-more-wrapper">
                         <Link href={`/projects/${project._id}`}>
                           <a className="text">Read More...</a>
                         </Link>
                       </span>
-                    )}
+                    )} */}
                   </p>
                 </div>
               </div>
               <div className="card-right">
                 <div className="card-right-top">
                   <Link href={`/projects/${project._id}`}>
-                    <a>
+                    <a style={{ width: "100%" }}>
                       <Button
                         icon
                         loading={false}
                         labelPosition="left"
                         style={{ width: buttonWidth }}
+                        fluid
                       >
                         {topButtonIcon}
                         {topButtonText}
@@ -309,7 +341,7 @@ export default function Home() {
       });
     }
     return null;
-  }, [projects]);
+  }, [projects, windowSize]);
 
   const getProjectsPaginationCount = useMemo(() => {
     if (projects.loading) {

@@ -19,7 +19,7 @@ import { useRouter } from "next/router";
 import { positions, Provider as ReactAlertProvider } from "react-alert";
 import { useDispatch } from "react-redux";
 import { wrapper } from "../store";
-import WalletConnectProvider from "../lib/walletConnectContext";
+import WalletConnectProvider from "../lib/walletConnect";
 
 const alertOptions = {
   timeout: 5000,

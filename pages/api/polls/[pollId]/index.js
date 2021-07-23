@@ -97,6 +97,10 @@ export default async (req, res) => {
           pollToUpdate.proposals = pollToUpdate.proposals.filter(
             (p) => p._id != proposalId
           );
+
+          pollToUpdate.alreadyVoted = pollToUpdate.alreadyVoted.filter(
+            (p) => p.proposalId != proposalId
+          );
           continue;
         }
         if (proposalInDb && !proposal.deleted) {

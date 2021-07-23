@@ -1,17 +1,4 @@
-import Head from "next/head";
-import Link from "next/link";
-import {
-  Button,
-  Divider,
-  Header,
-  Icon,
-  Grid,
-  Table,
-  Tab,
-  Form,
-  Segment,
-  FormField,
-} from "semantic-ui-react";
+import { Button, Icon, Tab, Form, Segment } from "semantic-ui-react";
 import { useSelector } from "react-redux";
 import { useState, useEffect } from "react";
 import Editor from "../../../components/admin/Editor";
@@ -59,7 +46,8 @@ export default function AdminAddProject() {
     });
   };
 
-  const submitForm = async () => {
+  const submitForm = async (e) => {
+    e.preventDefault();
     try {
       const response = await axios.post("/api/projects", {
         ...projectInputs,
@@ -263,11 +251,11 @@ export default function AdminAddProject() {
   ];
 
   return (
-    <div className="admin-add-project-page">
+    <div className="admin-sub-page admin-add-project-page">
       {state.admin.loggedIn && (
-        <Form>
+        <Form onSubmit={submitForm}>
           <Tab
-            className="tabs add-project-tabs"
+            className="tabs add-project-tabs sub-page-tabs"
             menu={{ pointing: true }}
             panes={panes}
           />
@@ -278,7 +266,6 @@ export default function AdminAddProject() {
             icon
             size="small"
             color="blue"
-            onClick={submitForm}
           >
             <Icon name="add square" />
             Add Project

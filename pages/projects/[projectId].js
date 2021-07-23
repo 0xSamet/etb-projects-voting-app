@@ -20,7 +20,7 @@ import randomColor from "randomcolor";
 import { useAlert } from "react-alert";
 import { useDispatch, useSelector } from "react-redux";
 import clsx from "clsx";
-import { useWalletConnectContext } from "../../lib/walletConnectContext";
+import { useWalletConnect } from "../../lib/walletConnect";
 import { convertUtf8ToHex } from "@walletconnect/utils";
 import { userLoginSuccess, userLogout } from "../../store";
 import { recoverPersonalSignature } from "eth-sig-util";
@@ -83,7 +83,7 @@ export default function ProjectDetail() {
     false
   );
   const state = useSelector((state) => state);
-  const { walletConnect } = useWalletConnectContext();
+  const { walletConnect } = useWalletConnect();
   const dispatch = useDispatch();
 
   const lastVoteSprings = useSprings(
@@ -575,14 +575,14 @@ export default function ProjectDetail() {
   }, [project.participants]);
 
   const renderVotingHeader = useMemo(() => {
-    if (project.isVotingEnded) {
+    if (project.isVotingEnded || isUserAlreadyVoteThisProject) {
       return "Results";
     }
     if (project.isVotingStarted) {
       return "Vote This Project";
     }
     return "Voting didn't start yet";
-  }, [project]);
+  }, [project, isUserAlreadyVoteThisProject]);
 
   const renderCountDown = () => {
     if (project.isVotingEnded) {
@@ -626,19 +626,19 @@ export default function ProjectDetail() {
   };
 
   return (
-    <div className="project-page">
+    <div className="detail-page">
       {project.loading ? (
         <Dimmer active inverted>
           <Loader size="medium">Loading</Loader>
         </Dimmer>
       ) : (
         <>
-          <div className="project-detail">
-            <Header as="h1" className="projects-title">
+          <div className="detail">
+            <Header as="h1" className="detail-title">
               {project.name}
             </Header>
             <Divider />
-            <div className="project-description">
+            <div className="detail-description">
               <EditorView description={project.description} />
             </div>
           </div>

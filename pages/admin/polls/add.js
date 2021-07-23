@@ -1,17 +1,4 @@
-import Head from "next/head";
-import Link from "next/link";
-import {
-  Button,
-  Divider,
-  Header,
-  Icon,
-  Grid,
-  Table,
-  Tab,
-  Form,
-  Segment,
-  FormField,
-} from "semantic-ui-react";
+import { Button, Icon, Tab, Form, Segment } from "semantic-ui-react";
 import { useSelector } from "react-redux";
 import { useState, useEffect } from "react";
 import Editor from "../../../components/admin/Editor";
@@ -58,7 +45,8 @@ export default function AdminAddPoll() {
     });
   };
 
-  const submitForm = async () => {
+  const submitForm = async (e) => {
+    e.preventDefault();
     try {
       const response = await axios.post("/api/polls", {
         ...pollInputs,
@@ -228,11 +216,11 @@ export default function AdminAddPoll() {
   ];
 
   return (
-    <div className="admin-add-poll-page">
+    <div className="admin-sub-page admin-add-poll-page">
       {state.admin.loggedIn && (
-        <Form>
+        <Form onSubmit={submitForm}>
           <Tab
-            className="tabs add-poll-tabs"
+            className="tabs add-poll-tabs sub-page-tabs"
             menu={{ pointing: true }}
             panes={panes}
           />
@@ -243,7 +231,6 @@ export default function AdminAddPoll() {
             icon
             size="small"
             color="blue"
-            onClick={submitForm}
           >
             <Icon name="add square" />
             Add Poll
