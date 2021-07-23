@@ -28,6 +28,7 @@ import { useSpring, useSprings, animated } from "react-spring";
 import moment from "moment";
 import BigNumber from "bignumber.js";
 import Countdown from "react-countdown";
+import numeral from "numeral";
 
 export default function PollDetail() {
   const router = useRouter();
@@ -761,7 +762,9 @@ export default function PollDetail() {
                         <Feed.Date>{dateFormat}</Feed.Date>
                         <span className="feed-wallet">{voted.wallet}</span>
                         <Divider />
-                        <p>{`Have ${voted.tokenHave} ETB Tokens`}</p>
+                        <p>{`Have ${numeral(voted.tokenHave).format(
+                          "0,0.00000"
+                        )} ETB Tokens`}</p>
                       </Feed.Content>
                     </animated.div>
                   );

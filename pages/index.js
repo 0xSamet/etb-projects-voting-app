@@ -84,7 +84,8 @@ export default function Home() {
         ...projects,
         playAnimation: true,
       });
-    } else {
+    }
+    if (activeTab === 1) {
       setPolls({
         ...polls,
         playAnimation: true,
