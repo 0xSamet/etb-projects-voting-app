@@ -11,6 +11,7 @@ $br1350: "(max-width: 1350px)";
 $br1199: "(max-width: 1199px)";
 $br1099: "(max-width: 1099px)";
 $br1000: "(max-width: 1000px)";
+$br991: "(max-width: 991px)";
 $br950: "(max-width: 950px)";
 $br900: "(max-width: 900px)";
 $br767: "(max-width: 767px)";
@@ -348,6 +349,7 @@ a {
     margin: 60px 0;
     border-radius: $radius;
     position: relative;
+    overflow: hidden;
     @media #{$br1799} {
       border-radius: 0px;
     }
@@ -391,8 +393,7 @@ a {
         .project {
           display: flex;
           flex: 0 0 50%;
-          height: 100%;
-          min-height: 180px;
+          min-height: 100%;
           background: #fff;
           border: 5px solid transparent;
           padding: 15px 0 15px 15px;
@@ -412,6 +413,9 @@ a {
               min-height: 151.11px;
               @media #{$br1350} {
                 font-size: 13px;
+              }
+              @media #{$br991} {
+                min-height: auto;
               }
               .read-more-wrapper {
                 position: relative;
