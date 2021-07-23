@@ -23,7 +23,7 @@ export default function AdminHeader() {
   };
 
   return (
-    <header>
+    <header className="admin">
       <div className="header-logo">
         <Link href="/admin">
           <a>

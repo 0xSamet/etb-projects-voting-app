@@ -293,11 +293,6 @@ a {
       flex: 0 1 100%;
       justify-content: flex-end;
       align-items: center;
-      > button {
-        @media #{$br900} {
-          display: none;
-        }
-      }
       .menu {
         list-style: none;
         display: flex;
@@ -310,9 +305,7 @@ a {
         @media #{$br950} {
           font-size: 13px;
         }
-        @media #{$br900} {
-          display: none;
-        }
+
         li {
           margin: 0px 5px;
           &:not(.active) {
@@ -327,9 +320,6 @@ a {
         @media #{$br1350} {
           font-size: 13px;
         }
-        @media #{$br900} {
-          display: none;
-        }
       }
       .hamburger-wrapper {
         // position: fixed;
@@ -339,6 +329,25 @@ a {
         display: none;
         @media #{$br900} {
           display: block;
+        }
+      }
+    }
+    &.normal {
+      .header-right {
+        .menu {
+          @media #{$br900} {
+            display: none;
+          }
+        }
+        .login-options-trigger-btn {
+          @media #{$br900} {
+            display: none;
+          }
+        }
+        > button {
+          @media #{$br900} {
+            display: none;
+          }
         }
       }
     }
@@ -359,6 +368,14 @@ a {
         display: flex;
         justify-content: center;
         align-items: center;
+        .menu {
+          @media #{$br677} {
+            font-size: 13px;
+          }
+          @media #{$br500} {
+            font-size: 12px;
+          }
+        }
       }
       .tabs-options {
         display: flex;
@@ -371,6 +388,10 @@ a {
           font-weight: 600;
           cursor: pointer;
           transition: background 0.15s, color 0.15s;
+          color: rgba(0, 0, 0, 0.6);
+          @media #{$br677} {
+            font-size: 15px;
+          }
           &.active {
             background: #a5a5a5;
             color: #fff;
@@ -409,10 +430,14 @@ a {
           .card-left {
             flex: 0 0 60%;
             text-align: justify;
+            .project-title {
+              color: rgba(0, 0, 0, 0.6);
+            }
             .project-description {
               min-height: 151.11px;
+              font-size: 13px;
               @media #{$br1350} {
-                font-size: 13px;
+                font-size: 12px;
               }
               @media #{$br991} {
                 min-height: auto;
@@ -459,6 +484,9 @@ a {
               align-items: center;
               margin-top: 15px;
             }
+            @media #{$br677} {
+              margin-top: 30px;
+            }
             @media #{$br600} {
               justify-content: stretch;
             }
@@ -480,6 +508,12 @@ a {
                 margin: 0;
                 background: transparent;
                 border: 1px solid #e0e1e2;
+                @media #{$br677} {
+                  font-size: 13px;
+                }
+                i {
+                  font-size: 14px;
+                }
                 @media #{$br1350} {
                   height: 54px;
                 }
@@ -542,6 +576,7 @@ a {
             flex: 0 0 60%;
             text-align: justify;
             .poll-title {
+              color: rgba(0, 0, 0, 0.6);
               @media #{$br1350} {
                 text-align: center;
               }
@@ -558,6 +593,9 @@ a {
               justify-content: space-between;
               align-items: center;
               margin-top: 15px;
+            }
+            @media #{$br677} {
+              margin-top: 30px;
             }
             @media #{$br600} {
               justify-content: stretch;
@@ -582,6 +620,9 @@ a {
                 margin: 0;
                 @media #{$br1350} {
                   height: 54px;
+                }
+                @media #{$br677} {
+                  font-size: 13px;
                 }
                 @media #{$br600} {
                   height: 54px;
@@ -666,7 +707,7 @@ a {
           padding: 37.5px 37.5px 0 37.5px;
         }
         @media #{$br560} {
-          padding: 25px 10px 0 10px;
+          padding: 40px 10px 0 10px;
         }
         position: relative;
         .options-title {
@@ -768,7 +809,7 @@ a {
           padding: 37.5px 37.5px 0 37.5px;
         }
         @media #{$br560} {
-          padding: 25px 10px 0 10px;
+          padding: 40px 10px 0 10px;
         }
         .feed {
           max-height: 300px;
@@ -846,9 +887,7 @@ a {
         @media #{$br677} {
           width: 300px;
         }
-        @media #{$br525} {
-          width: calc(100vw - 40px);
-        }
+
         .show-hide-trigger {
           width: 40px;
           height: 40px;
@@ -862,7 +901,12 @@ a {
           padding: 5px;
           border-top-left-radius: $radius;
           border-bottom-left-radius: $radius;
-          background: #fff;
+          background: rgba(255, 255, 255, 1);
+          z-index: -1;
+          transform: translateX(100%);
+          @media #{$br1350} {
+            transform: translateX(0);
+          }
           @media #{$br677} {
             width: 30px;
             height: 30px;
@@ -875,9 +919,14 @@ a {
           }
         }
         &.hide {
-          transform: translateX(100%);
-          svg {
-            transform: rotate(180deg);
+          @media #{$br1350} {
+            transform: translateX(100%);
+            svg {
+              transform: rotate(180deg);
+            }
+            .show-hide-trigger {
+              background: rgba(255, 255, 255, 0.6);
+            }
           }
         }
         .chart {
@@ -933,14 +982,19 @@ a {
         justify-content: center;
         .tabs-option {
           font-size: 18px;
-          background: #f1f1f1;
           padding: 10px;
           border-radius: 5px;
-          opacity: 0.7;
+          border: 1px solid #e0e1e2;
           font-weight: 600;
           cursor: pointer;
+          transition: background 0.15s, color 0.15s;
+          color: rgba(0, 0, 0, 0.6);
+          @media #{$br677} {
+            font-size: 15px;
+          }
           &.active {
-            opacity: 1;
+            background: #a5a5a5;
+            color: #fff;
           }
           &:nth-child(odd) {
             margin: 0 5px;

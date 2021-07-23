@@ -274,7 +274,7 @@ export default function MyHeader() {
           </span>
         </span>
       </div>
-      <header>
+      <header className="normal">
         <div className="header-logo">
           <Link href="/">
             <a>

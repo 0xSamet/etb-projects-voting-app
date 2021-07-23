@@ -29,6 +29,7 @@ import moment from "moment";
 import BigNumber from "bignumber.js";
 import Countdown from "react-countdown";
 import numeral from "numeral";
+import useWindowSize from "../../hooks/useWindowSize";
 
 export default function PollDetail() {
   const router = useRouter();
@@ -84,6 +85,7 @@ export default function PollDetail() {
   const state = useSelector((state) => state);
   const { walletConnect } = useWalletConnect();
   const dispatch = useDispatch();
+  const windowSize = useWindowSize();
 
   const lastVoteSprings = useSprings(
     poll.alreadyVoted.length,
@@ -96,6 +98,14 @@ export default function PollDetail() {
       },
     }))
   );
+
+  useEffect(() => {
+    if (windowSize.width && windowSize.height) {
+      if (windowSize.width < 1350) {
+        setHideRightSide(true);
+      }
+    }
+  }, [windowSize]);
 
   useEffect(async () => {
     if (walletConnect.connected) {

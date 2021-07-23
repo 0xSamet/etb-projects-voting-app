@@ -59,7 +59,6 @@ export default function Home() {
     to: { x: 0 },
     reset: projects.playAnimation,
     onRest: () => {
-      console.log("b");
       setProjects({
         ...projects,
         playAnimation: false,
@@ -79,6 +78,9 @@ export default function Home() {
   });
 
   useEffect(() => {
+    if (projects.loading || polls.loading) {
+      return false;
+    }
     if (activeTab === 0) {
       setProjects({
         ...projects,
@@ -107,20 +109,7 @@ export default function Home() {
 
     getProjects();
     getPolls();
-
-    router.events.on("routeChangeComplete", getProjectsAndPollsOnIconClick);
-
-    return () => {
-      router.events.off("routeChangeComplete", getProjectsAndPollsOnIconClick);
-    };
   }, []);
-
-  const getProjectsAndPollsOnIconClick = (path) => {
-    if (path === "/") {
-      getProjects();
-      return getPolls();
-    }
-  };
 
   const getProjects = async () => {
     try {
@@ -128,6 +117,7 @@ export default function Home() {
         ...projects,
         loading: true,
         data: [],
+        playAnimation: false,
       });
       const response = await axios("/api/projects");
 
@@ -169,6 +159,7 @@ export default function Home() {
         ...polls,
         loading: true,
         data: [],
+        playAnimation: false,
       });
       const response = await axios("/api/polls");
 

@@ -27,6 +27,7 @@ export default function AdminHome() {
       currentPage: 1,
       projectsPerPage: 10,
     },
+    playAnimation: false,
   });
   const [polls, setPolls] = useState({
     loading: true,
@@ -35,19 +36,50 @@ export default function AdminHome() {
       currentPage: 1,
       pollsPerPage: 10,
     },
+    playAnimation: false,
   });
   const alert = useAlert();
   const [activeTab, setActiveTab] = useState(0);
   const projectStyles = useSpring({
     from: { x: -100 },
     to: { x: 0 },
-    reset: true,
+    reset: projects.playAnimation,
+    onRest: () => {
+      setProjects({
+        ...projects,
+        playAnimation: false,
+      });
+    },
   });
   const pollStyles = useSpring({
     from: { x: 100 },
     to: { x: 0 },
-    reset: true,
+    reset: polls.playAnimation,
+    onRest: () => {
+      setPolls({
+        ...polls,
+        playAnimation: false,
+      });
+    },
   });
+
+  useEffect(() => {
+    if (projects.loading || polls.loading) {
+      return false;
+    }
+    if (activeTab === 0) {
+      return setProjects({
+        ...projects,
+        playAnimation: true,
+      });
+    }
+    if (activeTab === 1) {
+      return setPolls({
+        ...polls,
+        playAnimation: true,
+      });
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (state.admin.loggedIn) {
@@ -62,6 +94,7 @@ export default function AdminHome() {
         ...projects,
         loading: true,
         data: [],
+        playAnimation: false,
       });
       const response = await axios("/api/projects");
 
@@ -89,6 +122,7 @@ export default function AdminHome() {
             data: response.data.projects.sort(
               (a, b) => a.sort_order - b.sort_order
             ),
+            playAnimation: true,
           });
         }
         setProjects({
@@ -97,6 +131,7 @@ export default function AdminHome() {
           data: response.data.projects.sort(
             (a, b) => a.sort_order - b.sort_order
           ),
+          playAnimation: true,
         });
       }
     } catch (e) {
@@ -116,6 +151,7 @@ export default function AdminHome() {
         ...polls,
         loading: true,
         data: [],
+        playAnimation: false,
       });
       const response = await axios("/api/polls");
 
@@ -140,6 +176,7 @@ export default function AdminHome() {
               ...polls.pagination,
               currentPage: polls.pagination.currentPage - 1,
             },
+            playAnimation: true,
           });
         }
 
@@ -147,6 +184,7 @@ export default function AdminHome() {
           ...polls,
           loading: false,
           data: response.data.polls.sort((a, b) => a.sort_order - b.sort_order),
+          playAnimation: true,
         });
       }
     } catch (e) {
