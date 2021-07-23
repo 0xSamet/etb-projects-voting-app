@@ -443,12 +443,13 @@ export default function Home() {
               <div className="card-right">
                 <div className="card-right-top">
                   <Link href={`/polls/${poll._id}`}>
-                    <a>
+                    <a style={{ width: "100%" }}>
                       <Button
                         icon
                         loading={false}
                         labelPosition="left"
                         style={{ width: buttonWidth }}
+                        fluid
                       >
                         {topButtonIcon}
                         {topButtonText}
@@ -469,7 +470,7 @@ export default function Home() {
       });
     }
     return null;
-  }, [polls]);
+  }, [polls, windowSize]);
 
   const getPollsPaginationCount = useMemo(() => {
     if (polls.loading) {

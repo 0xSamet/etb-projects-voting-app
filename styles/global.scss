@@ -644,6 +644,17 @@ a {
         @media #{$br560} {
           padding: 25px 10px 0 10px;
         }
+        .detail-title {
+          @media #{$br1350} {
+            font-size: 24px;
+          }
+          @media #{$br991} {
+            font-size: 22px;
+          }
+          @media #{$br677} {
+            font-size: 20px;
+          }
+        }
       }
       .options-wrapper {
         padding: 75px 630px 0 230px;
@@ -661,10 +672,15 @@ a {
         .options-title {
           box-shadow: 0px 1px 3px -1px rgb(143 143 143 / 20%);
           padding-bottom: 5px;
+          @media #{$br478} {
+            font-size: 16px;
+          }
         }
         .option {
           margin: 15px 0px;
-
+          @media #{$br677} {
+            margin: 10px 0px;
+          }
           .option-left,
           .option-right {
             z-index: 1;
@@ -679,6 +695,9 @@ a {
             padding-right: 100px;
             span {
               font-weight: 600;
+              @media #{$br677} {
+                font-size: 13px;
+              }
               &.bolder {
                 font-weight: 700;
               }
@@ -689,6 +708,9 @@ a {
             display: flex;
             position: relative;
             overflow: hidden;
+            @media #{$br677} {
+              padding: 10px;
+            }
             p {
               margin-left: 10px;
             }
@@ -708,8 +730,10 @@ a {
               top: 50%;
               transform: translateY(-50%);
               right: 15px;
-
               z-index: 0;
+              @media #{$br677} {
+                font-size: 13px;
+              }
             }
             .option-checked {
               position: absolute;
@@ -767,6 +791,9 @@ a {
             .content {
               min-height: auto;
               background: none;
+              @media #{$br677} {
+                font-size: 13px;
+              }
             }
             .divider {
               margin: 3px 0px;
@@ -781,6 +808,9 @@ a {
           justify-content: space-between;
           align-items: center;
           box-shadow: 0px 1px 3px -1px rgb(143 143 143 / 20%);
+          @media #{$br478} {
+            font-size: 16px;
+          }
           .refresh-button {
             margin: 0;
             display: flex;
@@ -788,10 +818,14 @@ a {
             align-items: center;
             padding: 8px;
             line-height: normal;
+
             i.refresh {
               animation: button-spin 0.6s linear;
               animation-iteration-count: infinite;
               animation-play-state: paused;
+              @media #{$br677} {
+                font-size: 13px;
+              }
             }
             &.refreshing {
               i.refresh {
@@ -809,6 +843,9 @@ a {
         right: 0;
         transition: 0.3s;
         z-index: 1;
+        @media #{$br677} {
+          width: 300px;
+        }
         @media #{$br525} {
           width: calc(100vw - 40px);
         }
@@ -826,6 +863,11 @@ a {
           border-top-left-radius: $radius;
           border-bottom-left-radius: $radius;
           background: #fff;
+          @media #{$br677} {
+            width: 30px;
+            height: 30px;
+            left: -30px;
+          }
           svg {
             width: inherit;
             height: inherit;
@@ -866,12 +908,19 @@ a {
             align-items: center;
             justify-content: center;
             padding: 10px;
+
             .date-title {
               font-weight: 700;
               font-size: 14px;
+              @media #{$br677} {
+                font-size: 12px;
+              }
             }
             .date-content {
               padding-top: 3px;
+              @media #{$br677} {
+                font-size: 10px;
+              }
             }
           }
         }
@@ -940,6 +989,9 @@ a {
       align-items: center;
       font-weight: 700;
       color: #fff;
+      @media #{$br677} {
+        font-size: 11px;
+      }
     }
     .footer-right {
       flex: 0 0 50%;
@@ -965,6 +1017,11 @@ a {
       flex: 0 0 25px;
       max-width: 25px;
       max-height: 25px;
+      @media #{$br677} {
+        flex: 0 0 20px;
+        max-width: 20px;
+        max-height: 20px;
+      }
       path {
         fill: #fff;
       }
@@ -973,6 +1030,11 @@ a {
       flex: 0 0 25px;
       max-width: 25px;
       max-height: 25px;
+      @media #{$br677} {
+        flex: 0 0 20px;
+        max-width: 20px;
+        max-height: 20px;
+      }
       svg {
         path {
           fill: #fff;
