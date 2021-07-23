@@ -79,6 +79,7 @@ export default function PollDetail() {
   );
   const [alreadyVotedLoading, setAlreadyVotedLoading] = useState(false);
   const [proposalsColorPropAdded, setProposalsColorPropAdded] = useState(false);
+  const [hideStickyPart, setHideStickyPart] = useState(false);
   const state = useSelector((state) => state);
   const { walletConnect } = useWalletConnect();
   const dispatch = useDispatch();
@@ -523,9 +524,14 @@ export default function PollDetail() {
   }, [poll.metamaskSign.signature]);
 
   const onClickVoteBtn = async () => {
+    if (!state.user.loggedIn) {
+      return alert.error("You need the connect wallet!");
+    }
+
     if (!poll.selectedProposal && poll.selectedProposal !== 0) {
       return alert.error("Please make o choice!");
     }
+
     if (!modals[1].confirmed && !modals[2].confirmed) {
       return setModals({
         ...modals,
@@ -635,12 +641,7 @@ export default function PollDetail() {
               <EditorView description={poll.description} />
             </div>
           </div>
-          <div
-            className={clsx({
-              "options-wrapper": true,
-              "need-login-active": !state.user.loggedIn,
-            })}
-          >
+          <div className="options-wrapper">
             <Header as="h3" className="options-title">
               {renderVotingHeader}
             </Header>
@@ -717,12 +718,6 @@ export default function PollDetail() {
             ) : (
               <Header as="h4">No proposals found for this poll yet</Header>
             )}
-
-            <div className="vote-need-login-wrapper">
-              <div className="message-box">
-                <Header as="h3">You need the connect wallet to vote</Header>
-              </div>
-            </div>
           </div>
           <div className="last-votes">
             <Header as="h3" className="last-votes-title">
@@ -776,10 +771,23 @@ export default function PollDetail() {
               <Header as="h4">No one vote this poll yet</Header>
             )}
           </div>
-          <div className="sticky-wrapper-outside">
+          <div
+            className={clsx({
+              "detail-page-right": true,
+              hide: hideStickyPart,
+            })}
+          >
             <div className="chart">{pieChartMemo}</div>
             <div className="dates">
               <div className="date">{renderCountDown()}</div>
+            </div>
+            <div
+              className="show-hide-trigger"
+              onClick={() => setHideStickyPart(!hideStickyPart)}
+            >
+              <svg viewBox="0 0 512.002 512.002">
+                <path d="M388.425 241.951L151.609 5.79c-7.759-7.733-20.321-7.72-28.067.04-7.74 7.759-7.72 20.328.04 28.067l222.72 222.105-222.728 222.104c-7.759 7.74-7.779 20.301-.04 28.061a19.8 19.8 0 0014.057 5.835 19.79 19.79 0 0014.017-5.795l236.817-236.155c3.737-3.718 5.834-8.778 5.834-14.05s-2.103-10.326-5.834-14.051z" />
+              </svg>
             </div>
           </div>
           <Modal

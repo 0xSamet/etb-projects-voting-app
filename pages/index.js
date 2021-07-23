@@ -296,13 +296,13 @@ export default function Home() {
                 <div className="project-description">
                   <p>
                     {shortDescription}
-                    {/* {project.short_description.length > 599 && (
+                    {shortDescription.length > 598 && (
                       <span className="read-more-wrapper">
                         <Link href={`/projects/${project._id}`}>
                           <a className="text">Read More...</a>
                         </Link>
                       </span>
-                    )} */}
+                    )}
                   </p>
                 </div>
               </div>
@@ -426,11 +426,16 @@ export default function Home() {
           );
           topButtonIcon = <Icon name="search" />;
         }
+
+        if (windowSize.width < 600) {
+          buttonWidth = "100%";
+        }
+
         return (
           <Grid.Column width={16} key={poll._id}>
             <div className="poll">
               <div className="card-left">
-                <Header as="h4" className="project-title">
+                <Header as="h4" className="poll-title">
                   {poll.name}
                 </Header>
               </div>

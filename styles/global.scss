@@ -6,8 +6,10 @@ $radius: 0.28571429rem;
 
 // breakpoints
 $br1799: "(max-width: 1799px)";
+$br1550: "(max-width: 1550px)";
 $br1350: "(max-width: 1350px)";
 $br1199: "(max-width: 1199px)";
+$br1099: "(max-width: 1099px)";
 $br1000: "(max-width: 1000px)";
 $br950: "(max-width: 950px)";
 $br900: "(max-width: 900px)";
@@ -15,6 +17,7 @@ $br767: "(max-width: 767px)";
 $br677: "(max-width: 677px)";
 $br600: "(max-width: 600px)";
 $br560: "(max-width: 560px)";
+$br525: "(max-width: 525px)";
 $br500: "(max-width: 500px)";
 $br478: "(max-width: 478px)";
 $br416: "(max-width: 416px)";
@@ -103,7 +106,7 @@ a {
     width: 300px;
     height: 100%;
     background: #fff;
-    z-index: 1;
+    z-index: 2;
     transition: transform 0.15s;
     transform: translateX(100%);
     @media #{$br500} {
@@ -331,7 +334,7 @@ a {
         // position: fixed;
         top: 10px;
         right: 10px;
-        z-index: 2;
+        z-index: 3;
         display: none;
         @media #{$br900} {
           display: block;
@@ -345,6 +348,9 @@ a {
     margin: 60px 0;
     border-radius: $radius;
     position: relative;
+    @media #{$br1799} {
+      border-radius: 0px;
+    }
     .homepage {
       padding: 60px 0;
       .pagination {
@@ -385,6 +391,7 @@ a {
         .project {
           display: flex;
           flex: 0 0 50%;
+          height: 100%;
           min-height: 180px;
           background: #fff;
           border: 5px solid transparent;
@@ -523,10 +530,18 @@ a {
           -webkit-box-shadow: 0px 1px 5px 0px rgba(143, 143, 143, 0.2);
           -moz-box-shadow: 0px 1px 5px 0px rgba(143, 143, 143, 0.2);
           box-shadow: 0px 1px 5px 0px rgba(143, 143, 143, 0.2);
-
+          @media #{$br1350} {
+            flex-direction: column;
+            padding: 15px;
+          }
           .card-left {
             flex: 0 0 60%;
             text-align: justify;
+            .poll-title {
+              @media #{$br1350} {
+                text-align: center;
+              }
+            }
           }
           .card-right {
             flex: 0 0 40%;
@@ -534,6 +549,15 @@ a {
             flex-direction: column;
             justify-content: center;
             align-items: flex-end;
+            @media #{$br1350} {
+              flex-direction: row;
+              justify-content: space-between;
+              align-items: center;
+              margin-top: 15px;
+            }
+            @media #{$br600} {
+              justify-content: stretch;
+            }
             .poll-button {
               display: flex;
             }
@@ -544,12 +568,31 @@ a {
               align-items: center;
             }
             .card-right-top {
+              @media #{$br600} {
+                width: 50%;
+                padding-right: 5px;
+              }
               button {
+                background: transparent;
+                border: 1px solid #e0e1e2;
                 margin: 0;
+                @media #{$br1350} {
+                  height: 54px;
+                }
+                @media #{$br600} {
+                  height: 54px;
+                }
               }
             }
             .card-right-bottom {
               padding-top: 15px;
+              @media #{$br1350} {
+                padding-top: 0;
+              }
+              @media #{$br600} {
+                width: 50%;
+                padding-left: 5px;
+              }
               .poll-button {
                 border-radius: $radius;
                 border: 1px solid #e0e1e2;
@@ -559,7 +602,7 @@ a {
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
-
+                color: rgba(0, 0, 0, 0.6);
                 h5 {
                   font-size: 11px;
                   margin: 0px 0px 2px 0px;
@@ -583,26 +626,34 @@ a {
       background: #fff;
       min-height: 100vh;
       padding-bottom: 60px;
+      overflow: hidden;
       .detail {
         padding: 75px 630px 0 230px;
+        @media #{$br1550} {
+          padding: 37.5px 315px 0 115px;
+
+          max-width: 1200px;
+        }
+        @media #{$br1099} {
+          padding: 37.5px 37.5px 0 37.5px;
+        }
+        @media #{$br560} {
+          padding: 25px 10px 0 10px;
+        }
       }
       .options-wrapper {
         padding: 75px 630px 0 230px;
-        position: relative;
-        &.need-login-active {
-          .vote-need-login-wrapper {
-            .message-box {
-              transform: translateY(0);
-            }
-          }
-          .option,
-          .options-title {
-            filter: blur(2px);
-          }
-          .submit-vote-row {
-            filter: blur(2px);
-          }
+        @media #{$br1550} {
+          padding: 37.5px 315px 0 115px;
+          max-width: 1200px;
         }
+        @media #{$br1099} {
+          padding: 37.5px 37.5px 0 37.5px;
+        }
+        @media #{$br560} {
+          padding: 25px 10px 0 10px;
+        }
+        position: relative;
         .options-title {
           box-shadow: 0px 1px 3px -1px rgb(143 143 143 / 20%);
           padding-bottom: 5px;
@@ -678,38 +729,19 @@ a {
             margin: 0;
           }
         }
-        .vote-need-login-wrapper {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          padding: 75px 630px 0 230px;
-          overflow: hidden;
-          pointer-events: none;
-          .message-box {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: rgba(33, 33, 33, 0.75);
-            z-index: 1;
-            border-radius: $radius;
-            pointer-events: auto;
-            transform: translateY(100%);
-            transition: 0.5s;
-            .header {
-              color: #fff;
-            }
-          }
-        }
       }
       .last-votes {
         padding: 50px 630px 0 230px;
+        @media #{$br1550} {
+          padding: 37.5px 315px 0 115px;
+          max-width: 1200px;
+        }
+        @media #{$br1099} {
+          padding: 37.5px 37.5px 0 37.5px;
+        }
+        @media #{$br560} {
+          padding: 25px 10px 0 10px;
+        }
         .feed {
           max-height: 300px;
           overflow-x: hidden;
@@ -765,16 +797,41 @@ a {
           }
         }
       }
-      .sticky-wrapper-outside {
+      .detail-page-right {
         width: 400px;
         height: 100%;
         position: absolute;
         top: 0;
         right: 0;
-
+        transition: 0.3s;
+        z-index: 1;
+        @media #{$br525} {
+          width: calc(100vw - 40px);
+        }
+        .show-hide-trigger {
+          width: 40px;
+          position: absolute;
+          top: 100px;
+          left: -40px;
+          border: 1px solid #eeeeee;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 5px;
+          border-top-left-radius: $radius;
+          border-bottom-left-radius: $radius;
+          background: #fff;
+          svg {
+            transition: transform 0.3s;
+          }
+        }
+        &.hide {
+          transform: translateX(100%);
+          svg {
+            transform: rotate(180deg);
+          }
+        }
         .chart {
-          position: sticky;
-          top: 10px;
           min-height: 400px;
           margin-top: 75px;
           box-shadow: 0px 1px 5px 0px rgb(143 143 143 / 20%);
@@ -782,19 +839,19 @@ a {
           display: flex;
           justify-content: center;
           align-items: center;
+          background: #fff;
         }
         canvas {
           padding: 5px;
         }
         .dates {
-          position: sticky;
           margin-top: 15px;
-          top: 425px;
           box-shadow: 0px 1px 5px 0px rgb(143 143 143 / 20%);
           display: flex;
           justify-content: center;
           align-items: center;
           border-radius: $radius;
+          background: #fff;
           .date {
             display: flex;
             flex-direction: column;
@@ -867,6 +924,9 @@ a {
     border-top-left-radius: $radius;
     border-top-right-radius: $radius;
     background: linear-gradient(130deg, #5895d3 0, #a061b3 100%);
+    @media #{$br1799} {
+      border-radius: 0px;
+    }
     .footer-left {
       flex: 0 0 50%;
       display: flex;
