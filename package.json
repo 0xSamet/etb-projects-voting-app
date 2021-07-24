@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start -p $PORT"
+    "start": "next start -p $PORT",
+    "github-push": "git add . && git commit -m \"progress\" && git push -u origin HEAD:main"
   },
   "dependencies": {
     "@metamask/detect-provider": "^1.2.0",

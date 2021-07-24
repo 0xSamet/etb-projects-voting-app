@@ -1,4 +1,5 @@
 import { setDefaultHeaders } from "../../../middleware";
+import cookie from "cookie";
 
 export default async (req, res) => {
   await setDefaultHeaders(req, res);
