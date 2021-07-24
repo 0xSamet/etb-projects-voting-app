@@ -80,7 +80,6 @@ export default function PollDetail() {
     false
   );
   const [alreadyVotedLoading, setAlreadyVotedLoading] = useState(false);
-  const [proposalsColorPropAdded, setProposalsColorPropAdded] = useState(false);
   const [hideRightSide, setHideRightSide] = useState(false);
   const state = useSelector((state) => state);
   const { walletConnect } = useWalletConnect();
@@ -118,6 +117,8 @@ export default function PollDetail() {
         })
       );
     }
+
+    setInterval(getPoll, 30000);
   }, []);
 
   const checkUserAlreadyVoted = () => {
@@ -137,7 +138,7 @@ export default function PollDetail() {
     }
   };
 
-  const refreshAlreadyVoted = async () => {
+  const getPoll = async () => {
     if (router.query.pollId) {
       try {
         setAlreadyVotedLoading(true);
@@ -155,40 +156,17 @@ export default function PollDetail() {
   const updatePollWithTheGivenPoll = async (response) => {
     try {
       if (response && response.data && response.data.poll) {
-        let proposalsUpdate;
+        let proposalsUpdate = response.data.poll.proposals;
 
-        if (proposalsColorPropAdded) {
-          proposalsUpdate = response.data.poll.proposals.map((p) => {
-            const proposalId = p._id;
-            const tryFind = poll.proposals.find((p) => p._id === proposalId);
-            if (tryFind) {
-              return {
-                ...p,
-                color: tryFind.color,
-              };
-            } else {
-              const borderColor = randomColor({
-                format: "rgba",
-                alpha: 1,
-              });
-              const bgColor =
-                borderColor.substr(0, borderColor.length - 2) + "0.2)";
-
-              return {
-                ...p,
-                color: {
-                  bg: bgColor,
-                  border: borderColor,
-                },
-              };
-            }
-          });
-        } else {
-          proposalsUpdate = response.data.poll.proposals;
-        }
-
-        if (!proposalsColorPropAdded) {
-          proposalsUpdate = proposalsUpdate.map((p) => {
+        proposalsUpdate = proposalsUpdate.map((p) => {
+          const proposalId = p._id;
+          const tryFind = poll.proposals.find((p) => p._id === proposalId);
+          if (tryFind) {
+            return {
+              ...p,
+              color: tryFind.color,
+            };
+          } else {
             const borderColor = randomColor({
               format: "rgba",
               alpha: 1,
@@ -203,9 +181,8 @@ export default function PollDetail() {
                 border: borderColor,
               },
             };
-          });
-          setProposalsColorPropAdded(true);
-        }
+          }
+        });
 
         const totalTokenVoted = response.data.poll.proposals
           .map((p) => p.voteCount)
@@ -592,7 +569,7 @@ export default function PollDetail() {
             <Countdown
               date={Number(poll.end_date)}
               renderer={countDownRenderer}
-              onComplete={() => refreshAlreadyVoted()}
+              onComplete={() => getPoll()}
             />
           </span>
         </>
@@ -606,7 +583,7 @@ export default function PollDetail() {
           <Countdown
             date={Number(poll.start_date)}
             renderer={countDownRenderer}
-            onComplete={() => refreshAlreadyVoted()}
+            onComplete={() => getPoll()}
           />
         </span>
       </>
@@ -739,7 +716,7 @@ export default function PollDetail() {
                   "refresh-button": true,
                   refreshing: alreadyVotedLoading,
                 })}
-                onClick={refreshAlreadyVoted}
+                onClick={getPoll}
               >
                 <Icon size="tiny" name="refresh" />
               </Button>

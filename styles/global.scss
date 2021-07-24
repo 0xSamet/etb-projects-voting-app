@@ -686,14 +686,15 @@ a {
           padding: 25px 10px 0 10px;
         }
         .detail-title {
+          font-size: 22px;
           @media #{$br1350} {
-            font-size: 24px;
+            font-size: 21px;
           }
           @media #{$br991} {
-            font-size: 22px;
+            font-size: 20px;
           }
           @media #{$br677} {
-            font-size: 20px;
+            font-size: 19px;
           }
         }
       }

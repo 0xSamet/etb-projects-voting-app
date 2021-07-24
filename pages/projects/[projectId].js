@@ -81,9 +81,7 @@ export default function ProjectDetail() {
     setIsUserAlreadyVoteThisProject,
   ] = useState(false);
   const [alreadyVotedLoading, setAlreadyVotedLoading] = useState(false);
-  const [participantsColorPropAdded, setParticipantsColorPropAdded] = useState(
-    false
-  );
+
   const [hideRightSide, setHideRightSide] = useState(false);
 
   const state = useSelector((state) => state);
@@ -122,6 +120,8 @@ export default function ProjectDetail() {
         })
       );
     }
+
+    setInterval(getProject, 30000);
   }, []);
 
   const checkUserAlreadyVoted = () => {
@@ -141,7 +141,8 @@ export default function ProjectDetail() {
     }
   };
 
-  const refreshAlreadyVoted = async () => {
+  const getProject = async () => {
+    console.log("runs", router.query);
     if (router.query.projectId) {
       try {
         setAlreadyVotedLoading(true);
@@ -159,42 +160,19 @@ export default function ProjectDetail() {
   const updateProjectWithTheGivenProject = async (response) => {
     try {
       if (response && response.data && response.data.project) {
-        let participantsUpdate;
+        let participantsUpdate = response.data.project.participants;
 
-        if (participantsColorPropAdded) {
-          participantsUpdate = response.data.project.participants.map((p) => {
-            const participantId = p._id;
-            const tryFind = project.participants.find(
-              (p) => p._id === participantId
-            );
-            if (tryFind) {
-              return {
-                ...p,
-                color: tryFind.color,
-              };
-            } else {
-              const borderColor = randomColor({
-                format: "rgba",
-                alpha: 1,
-              });
-              const bgColor =
-                borderColor.substr(0, borderColor.length - 2) + "0.2)";
-
-              return {
-                ...p,
-                color: {
-                  bg: bgColor,
-                  border: borderColor,
-                },
-              };
-            }
-          });
-        } else {
-          participantsUpdate = response.data.project.participants;
-        }
-
-        if (!participantsColorPropAdded) {
-          participantsUpdate = participantsUpdate.map((p) => {
+        participantsUpdate = participantsUpdate.map((p) => {
+          const participantId = p._id;
+          const tryFind = project.participants.find(
+            (p) => p._id === participantId
+          );
+          if (tryFind) {
+            return {
+              ...p,
+              color: tryFind.color,
+            };
+          } else {
             const borderColor = randomColor({
               format: "rgba",
               alpha: 1,
@@ -209,9 +187,8 @@ export default function ProjectDetail() {
                 border: borderColor,
               },
             };
-          });
-          setParticipantsColorPropAdded(true);
-        }
+          }
+        });
 
         const totalTokenVoted = response.data.project.participants
           .map((p) => p.voteCount)
@@ -622,7 +599,7 @@ export default function ProjectDetail() {
             <Countdown
               date={Number(project.end_date)}
               renderer={countDownRenderer}
-              onComplete={() => refreshAlreadyVoted()}
+              onComplete={() => getProject()}
             />
           </span>
         </>
@@ -636,7 +613,7 @@ export default function ProjectDetail() {
           <Countdown
             date={Number(project.start_date)}
             renderer={countDownRenderer}
-            onComplete={() => refreshAlreadyVoted()}
+            onComplete={() => getProject()}
           />
         </span>
       </>
@@ -758,7 +735,7 @@ export default function ProjectDetail() {
                   "refresh-button": true,
                   refreshing: alreadyVotedLoading,
                 })}
-                onClick={refreshAlreadyVoted}
+                onClick={getProject}
               >
                 <Icon size="tiny" name="refresh" />
               </Button>

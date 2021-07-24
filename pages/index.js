@@ -155,6 +155,10 @@ export default function Home() {
 
   const getPolls = async () => {
     try {
+      setProjects({
+        ...projects,
+        playAnimation: false,
+      });
       setPolls({
         ...polls,
         loading: true,
@@ -180,7 +184,7 @@ export default function Home() {
                 isVotingEnded,
               };
             }),
-          playAnimation: true,
+          playAnimation: false,
         });
       }
     } catch (e) {
