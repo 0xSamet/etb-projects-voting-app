@@ -285,7 +285,10 @@ export default function AdminHome() {
     return null;
   }, [projects]);
 
-  const renderProjectsPagination = useMemo(() => {
+  const getProjectsPaginationCount = useMemo(() => {
+    if (projects.loading || projects.data.length === 0) {
+      return 1;
+    }
     const pageNumbers = [];
     for (
       let i = 1;
@@ -295,46 +298,7 @@ export default function AdminHome() {
     ) {
       pageNumbers.push(i);
     }
-
-    if (pageNumbers.length === 0) {
-      return null;
-    }
-
-    return (
-      <Pagination
-        activePage={projects.pagination.currentPage}
-        onPageChange={(_, page) => {
-          setProjects({
-            ...projects,
-            pagination: {
-              ...projects.pagination,
-              currentPage: page.activePage,
-            },
-          });
-        }}
-        ellipsisItem={{
-          content: <Icon name="ellipsis horizontal" />,
-          icon: true,
-        }}
-        firstItem={{
-          content: <Icon name="angle double left" />,
-          icon: true,
-        }}
-        lastItem={{
-          content: <Icon name="angle double right" />,
-          icon: true,
-        }}
-        prevItem={{
-          content: <Icon name="angle left" />,
-          icon: true,
-        }}
-        nextItem={{
-          content: <Icon name="angle right" />,
-          icon: true,
-        }}
-        totalPages={pageNumbers.length}
-      />
-    );
+    return pageNumbers.length;
   }, [projects]);
 
   const renderPolls = useMemo(() => {
@@ -387,55 +351,19 @@ export default function AdminHome() {
     return null;
   }, [polls]);
 
-  const renderPollsPagination = useMemo(() => {
+  const getPollsPaginationCount = useMemo(() => {
+    if (polls.loading || polls.data.length === 0) {
+      return 1;
+    }
     const pageNumbers = [];
     for (
       let i = 1;
-      i <= Math.ceil(polls.data.length / polls.pagination.pollsPerPage);
+      i <= Math.ceil(polls.data.length / polls.pagination.projectsPerPage);
       i++
     ) {
       pageNumbers.push(i);
     }
-
-    if (pageNumbers.length === 0) {
-      return null;
-    }
-
-    return (
-      <Pagination
-        activePage={polls.pagination.currentPage}
-        onPageChange={(_, page) => {
-          setPolls({
-            ...polls,
-            pagination: {
-              ...polls.pagination,
-              currentPage: page.activePage,
-            },
-          });
-        }}
-        ellipsisItem={{
-          content: <Icon name="ellipsis horizontal" />,
-          icon: true,
-        }}
-        firstItem={{
-          content: <Icon name="angle double left" />,
-          icon: true,
-        }}
-        lastItem={{
-          content: <Icon name="angle double right" />,
-          icon: true,
-        }}
-        prevItem={{
-          content: <Icon name="angle left" />,
-          icon: true,
-        }}
-        nextItem={{
-          content: <Icon name="angle right" />,
-          icon: true,
-        }}
-        totalPages={pageNumbers.length}
-      />
-    );
+    return pageNumbers.length;
   }, [polls]);
 
   return (
@@ -445,7 +373,7 @@ export default function AdminHome() {
           <div className="tabs-options">
             <div
               onClick={() => {
-                if (activeTab === 0) {
+                if (activeTab === 0 && !projects.loading) {
                   return getProjects();
                 }
                 setActiveTab(0);
@@ -463,7 +391,7 @@ export default function AdminHome() {
                 active: activeTab === 1,
               })}
               onClick={() => {
-                if (activeTab === 1) {
+                if (activeTab === 1 && !polls.loading) {
                   return getPolls();
                 }
                 setActiveTab(1);
@@ -529,7 +457,39 @@ export default function AdminHome() {
                 <Table.Footer>
                   <Table.Row>
                     <Table.HeaderCell colSpan="3" textAlign="right">
-                      {renderProjectsPagination}
+                      <Pagination
+                        activePage={projects.pagination.currentPage}
+                        onPageChange={(_, page) => {
+                          setProjects({
+                            ...projects,
+                            pagination: {
+                              ...projects.pagination,
+                              currentPage: page.activePage,
+                            },
+                          });
+                        }}
+                        ellipsisItem={{
+                          content: <Icon name="ellipsis horizontal" />,
+                          icon: true,
+                        }}
+                        firstItem={{
+                          content: <Icon name="angle double left" />,
+                          icon: true,
+                        }}
+                        lastItem={{
+                          content: <Icon name="angle double right" />,
+                          icon: true,
+                        }}
+                        prevItem={{
+                          content: <Icon name="angle left" />,
+                          icon: true,
+                        }}
+                        nextItem={{
+                          content: <Icon name="angle right" />,
+                          icon: true,
+                        }}
+                        totalPages={getProjectsPaginationCount}
+                      />
                     </Table.HeaderCell>
                   </Table.Row>
                 </Table.Footer>
@@ -592,7 +552,39 @@ export default function AdminHome() {
                 <Table.Footer>
                   <Table.Row>
                     <Table.HeaderCell colSpan="3" textAlign="right">
-                      {renderPollsPagination}
+                      <Pagination
+                        activePage={polls.pagination.currentPage}
+                        onPageChange={(_, page) => {
+                          setPolls({
+                            ...polls,
+                            pagination: {
+                              ...polls.pagination,
+                              currentPage: page.activePage,
+                            },
+                          });
+                        }}
+                        ellipsisItem={{
+                          content: <Icon name="ellipsis horizontal" />,
+                          icon: true,
+                        }}
+                        firstItem={{
+                          content: <Icon name="angle double left" />,
+                          icon: true,
+                        }}
+                        lastItem={{
+                          content: <Icon name="angle double right" />,
+                          icon: true,
+                        }}
+                        prevItem={{
+                          content: <Icon name="angle left" />,
+                          icon: true,
+                        }}
+                        nextItem={{
+                          content: <Icon name="angle right" />,
+                          icon: true,
+                        }}
+                        totalPages={getPollsPaginationCount}
+                      />
                     </Table.HeaderCell>
                   </Table.Row>
                 </Table.Footer>

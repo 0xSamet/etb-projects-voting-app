@@ -51,7 +51,10 @@ export default async (req, res) => {
         return res.status(err.response.status).json(err.response.data);
       }
 
-      if (tokenHave < BigNumber("0.1")) {
+      if (
+        process.env.VOTING_MIN_TOKEN &&
+        tokenHave < BigNumber(process.env.VOTING_MIN_TOKEN)
+      ) {
         return res.status(422).json({
           message: "You need atleast 0.1 Etb Token To Vote",
         });

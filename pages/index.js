@@ -216,7 +216,14 @@ export default function Home() {
     }
     if (projects.data && projects.data.length === 0) {
       return (
-        <div style={{ padding: 15, textAlign: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            padding: 50,
+          }}
+        >
           <Header>There is no project</Header>
         </div>
       );
@@ -252,7 +259,7 @@ export default function Home() {
             <p>{moment(Number(project.end_date)).format("L hh:mm A")}</p>
           );
         } else if (project.isVotingStarted) {
-          topButtonText = "GO TO VOTE";
+          topButtonText = "VOTE NOW";
           bottomButtonText = "VOTING ENDS IN";
           countDown = (
             <Countdown
@@ -336,7 +343,7 @@ export default function Home() {
   }, [projects, windowSize]);
 
   const getProjectsPaginationCount = useMemo(() => {
-    if (projects.loading) {
+    if (projects.loading || projects.data.length === 0) {
       return 1;
     }
     const pageNumbers = [];
@@ -352,6 +359,11 @@ export default function Home() {
   }, [projects]);
 
   const renderPolls = useMemo(() => {
+    const { currentPage, pollsPerPage } = polls.pagination;
+    const indexOfLastPoll = currentPage * pollsPerPage;
+    const indexOfFirstPoll = indexOfLastPoll - pollsPerPage;
+    const currentPolls = polls.data.slice(indexOfFirstPoll, indexOfLastPoll);
+
     if (polls.loading) {
       return (
         <>
@@ -364,7 +376,14 @@ export default function Home() {
     }
     if (polls.data && polls.data.length === 0) {
       return (
-        <div style={{ padding: 15, textAlign: "center" }}>
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            padding: 50,
+          }}
+        >
           <Header>There is no poll</Header>
         </div>
       );
@@ -383,7 +402,7 @@ export default function Home() {
       );
     };
     if (polls.data && polls.data.length > 0) {
-      return polls.data.map((poll, pollIndex) => {
+      return currentPolls.map((poll, pollIndex) => {
         let topButtonText = "";
         let topButtonIcon = <Icon name="chart pie" />;
         let bottomButtonText = "";
@@ -397,7 +416,7 @@ export default function Home() {
             <p>{moment(Number(poll.end_date)).format("L hh:mm A")}</p>
           );
         } else if (poll.isVotingStarted) {
-          topButtonText = "GO TO VOTE";
+          topButtonText = "VOTE NOW";
           bottomButtonText = "VOTING ENDS IN";
           countDown = (
             <Countdown
@@ -464,7 +483,7 @@ export default function Home() {
   }, [polls, windowSize]);
 
   const getPollsPaginationCount = useMemo(() => {
-    if (polls.loading) {
+    if (polls.loading || polls.data.length === 0) {
       return 1;
     }
 
@@ -485,7 +504,7 @@ export default function Home() {
       <div className="tabs-options">
         <div
           onClick={() => {
-            if (activeTab === 0) {
+            if (activeTab === 0 && !projects.loading) {
               return getProjects();
             }
             setActiveTab(0);
@@ -503,7 +522,7 @@ export default function Home() {
             active: activeTab === 1,
           })}
           onClick={() => {
-            if (activeTab === 1) {
+            if (activeTab === 1 && !polls.loading) {
               return getPolls();
             }
             setActiveTab(1);
