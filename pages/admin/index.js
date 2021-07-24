@@ -358,7 +358,7 @@ export default function AdminHome() {
     const pageNumbers = [];
     for (
       let i = 1;
-      i <= Math.ceil(polls.data.length / polls.pagination.projectsPerPage);
+      i <= Math.ceil(polls.data.length / polls.pagination.pollsPerPage);
       i++
     ) {
       pageNumbers.push(i);
