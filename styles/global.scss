@@ -714,6 +714,7 @@ a {
         .options-title {
           box-shadow: 0px 1px 3px -1px rgb(143 143 143 / 20%);
           padding-bottom: 5px;
+          font-size: 17px;
           @media #{$br478} {
             font-size: 16px;
           }
@@ -850,6 +851,7 @@ a {
           justify-content: space-between;
           align-items: center;
           box-shadow: 0px 1px 3px -1px rgb(143 143 143 / 20%);
+          font-size: 17px;
           @media #{$br478} {
             font-size: 16px;
           }
