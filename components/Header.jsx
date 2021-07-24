@@ -374,7 +374,7 @@ export default function MyHeader() {
           "mobile-menu": true,
           active: isMobileMenuActive,
         })}
-        styles={styles.mobileMenu}
+        style={styles.mobileMenu}
       >
         <div className="content-wrapper">
           {state.user.loggedIn ? (
@@ -427,7 +427,7 @@ export default function MyHeader() {
           "mobile-menu-close": true,
           active: isMobileMenuActive,
         })}
-        styles={styles.mobileMenuClose}
+        style={styles.mobileMenuClose}
         onClick={() => setIsMobileMenuActive(!isMobileMenuActive)}
       ></div>
     </>
