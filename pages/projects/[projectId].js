@@ -271,7 +271,9 @@ export default function ProjectDetail() {
   useEffect(async () => {
     if (router.query.projectId) {
       clearInterval(projectInterval);
-      const intervalId = setInterval(getProject, 30000);
+      const intervalId = setInterval(() => {
+        document.querySelector(".last-votes .refresh-button").click();
+      }, 30000);
       setProjectInterval(intervalId);
       try {
         const response = await axios(`/api/projects/${router.query.projectId}`);

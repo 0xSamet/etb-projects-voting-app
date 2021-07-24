@@ -266,7 +266,9 @@ export default function PollDetail() {
     if (router.query.pollId) {
       try {
         clearInterval(pollInterval);
-        const intervalId = setInterval(getPoll, 5000);
+        const intervalId = setInterval(() => {
+          document.querySelector(".last-votes .refresh-button").click();
+        }, 30000);
         setPollInterval(intervalId);
         const response = await axios(`/api/polls/${router.query.pollId}`);
         updatePollWithTheGivenPoll(response);
