@@ -81,6 +81,7 @@ export default function PollDetail() {
   );
   const [alreadyVotedLoading, setAlreadyVotedLoading] = useState(false);
   const [hideRightSide, setHideRightSide] = useState(false);
+  const [pollInterval, setPollInterval] = useState(null);
   const state = useSelector((state) => state);
   const { walletConnect } = useWalletConnect();
   const dispatch = useDispatch();
@@ -117,9 +118,15 @@ export default function PollDetail() {
         })
       );
     }
-
-    setInterval(getPoll, 30000);
   }, []);
+
+  useEffect(() => {
+    let updateInterval = pollInterval;
+
+    return () => {
+      clearInterval(updateInterval);
+    };
+  }, [pollInterval]);
 
   const checkUserAlreadyVoted = () => {
     if (state.user.loggedIn && poll) {
@@ -143,7 +150,7 @@ export default function PollDetail() {
       try {
         setAlreadyVotedLoading(true);
         const response = await axios(`/api/polls/${router.query.pollId}`);
-        await updatePollWithTheGivenPoll(response);
+        updatePollWithTheGivenPoll(response);
       } catch (e) {
         if (e.response && e.response.data && e.response.data.message) {
           return alert.error(e.response.data.message);
@@ -153,14 +160,14 @@ export default function PollDetail() {
     }
   };
 
-  const updatePollWithTheGivenPoll = async (response) => {
+  const updatePollWithTheGivenPoll = (response) => {
     try {
       if (response && response.data && response.data.poll) {
         let proposalsUpdate = response.data.poll.proposals;
 
         proposalsUpdate = proposalsUpdate.map((p) => {
           const proposalId = p._id;
-          const tryFind = poll.proposals.find((p) => p._id === proposalId);
+          const tryFind = poll.proposals.find((c) => c._id === proposalId);
           if (tryFind) {
             return {
               ...p,
@@ -258,8 +265,11 @@ export default function PollDetail() {
   useEffect(async () => {
     if (router.query.pollId) {
       try {
+        clearInterval(pollInterval);
+        const intervalId = setInterval(getPoll, 5000);
+        setPollInterval(intervalId);
         const response = await axios(`/api/polls/${router.query.pollId}`);
-        await updatePollWithTheGivenPoll(response);
+        updatePollWithTheGivenPoll(response);
       } catch (e) {
         if (e.response && e.response.status === 404) {
           return router.push("/");
@@ -418,7 +428,7 @@ export default function PollDetail() {
             }
           );
 
-          await updatePollWithTheGivenPoll(response);
+          updatePollWithTheGivenPoll(response);
           setModals({
             ...modals,
             1: {
@@ -471,7 +481,7 @@ export default function PollDetail() {
             }
           );
 
-          await updatePollWithTheGivenPoll(response);
+          updatePollWithTheGivenPoll(response);
           setModals({
             ...modals,
             1: {

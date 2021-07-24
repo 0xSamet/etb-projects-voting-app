@@ -81,8 +81,8 @@ export default function ProjectDetail() {
     setIsUserAlreadyVoteThisProject,
   ] = useState(false);
   const [alreadyVotedLoading, setAlreadyVotedLoading] = useState(false);
-
   const [hideRightSide, setHideRightSide] = useState(false);
+  const [projectInterval, setProjectInterval] = useState(null);
 
   const state = useSelector((state) => state);
   const { walletConnect } = useWalletConnect();
@@ -109,7 +109,7 @@ export default function ProjectDetail() {
     }
   }, [windowSize]);
 
-  useEffect(async () => {
+  useEffect(() => {
     if (walletConnect.connected) {
       const { accounts } = walletConnect;
       console.log({ walletConnect });
@@ -120,9 +120,15 @@ export default function ProjectDetail() {
         })
       );
     }
-
-    setInterval(getProject, 30000);
   }, []);
+
+  useEffect(() => {
+    let updateInterval = projectInterval;
+
+    return () => {
+      clearInterval(updateInterval);
+    };
+  }, [projectInterval]);
 
   const checkUserAlreadyVoted = () => {
     if (state.user.loggedIn && project) {
@@ -142,7 +148,6 @@ export default function ProjectDetail() {
   };
 
   const getProject = async () => {
-    console.log("runs", router.query);
     if (router.query.projectId) {
       try {
         setAlreadyVotedLoading(true);
@@ -265,6 +270,9 @@ export default function ProjectDetail() {
 
   useEffect(async () => {
     if (router.query.projectId) {
+      clearInterval(projectInterval);
+      const intervalId = setInterval(getProject, 30000);
+      setProjectInterval(intervalId);
       try {
         const response = await axios(`/api/projects/${router.query.projectId}`);
         await updateProjectWithTheGivenProject(response);
