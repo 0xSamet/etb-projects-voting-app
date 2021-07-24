@@ -13,7 +13,6 @@ import numeral from "numeral";
 import { useRouter } from "next/router";
 
 export default function MyHeader() {
-  //const alert = useAlert();
   const dispatch = useDispatch();
   const state = useSelector((state) => state);
   const [web3, setWeb3] = useState(null);
@@ -22,6 +21,40 @@ export default function MyHeader() {
   const [updateTokenHaveLoading, setUpdateTokenHaveLoading] = useState(false);
   const [isMobileMenuActive, setIsMobileMenuActive] = useState(false);
   const router = useRouter();
+  const [styles, setStyles] = useState({
+    tokenHoldingWrapper: {
+      transition: "none",
+    },
+    mobileMenuClose: {
+      transition: "none",
+    },
+    mobileMenu: {
+      transition: "none",
+    },
+  });
+
+  useEffect(async () => {
+    if (state.user.loggedIn) {
+      updateTokenHave();
+    }
+  }, [state.user.loggedIn]);
+
+  useEffect(async () => {
+    setTimeout(() => {
+      setStyles({
+        tokenHoldingWrapper: {
+          transition:
+            "transform 0.5s ease-in-out, -webkit-transform 0.5s ease-in-out",
+        },
+        mobileMenuClose: {
+          transition: "opacity 0.15s",
+        },
+        mobileMenu: {
+          transition: "transform 0.15s, -webkit-transform 0.15s",
+        },
+      });
+    }, 10000);
+  }, []);
 
   const connectMetamask = async () => {
     try {
@@ -83,12 +116,6 @@ export default function MyHeader() {
       }
     }
   };
-
-  useEffect(async () => {
-    if (state.user.loggedIn) {
-      updateTokenHave();
-    }
-  }, [state.user.loggedIn]);
 
   const logout = async () => {
     if (walletConnect.connected) {
@@ -260,6 +287,7 @@ export default function MyHeader() {
             "token-holding-wrapper": true,
             show: state.user.loggedIn,
           })}
+          style={styles.tokenHoldingWrapper}
         >
           <span className="title">ETB TOKEN HAVE</span>
           <span className="tokens">{formatTokenCount}</span>
@@ -346,6 +374,7 @@ export default function MyHeader() {
           "mobile-menu": true,
           active: isMobileMenuActive,
         })}
+        styles={styles.mobileMenu}
       >
         <div className="content-wrapper">
           {state.user.loggedIn ? (
@@ -398,6 +427,7 @@ export default function MyHeader() {
           "mobile-menu-close": true,
           active: isMobileMenuActive,
         })}
+        styles={styles.mobileMenuClose}
         onClick={() => setIsMobileMenuActive(!isMobileMenuActive)}
       ></div>
     </>
