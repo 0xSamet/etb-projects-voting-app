@@ -53,7 +53,7 @@ export default function MyHeader() {
           transition: "transform 0.15s, -webkit-transform 0.15s",
         },
       });
-    }, 10000);
+    }, 2000);
   }, []);
 
   const connectMetamask = async () => {
