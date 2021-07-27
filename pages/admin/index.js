@@ -19,87 +19,94 @@ import clsx from "clsx";
 import { animated, useSpring } from "react-spring";
 
 export default function AdminHome() {
-  const state = useSelector((state) => state);
-  const [projects, setProjects] = useState({
-    loading: true,
-    data: [],
-    pagination: {
-      currentPage: 1,
-      projectsPerPage: 10,
+  const store = useSelector((store) => store);
+  const [state, setState] = useState({
+    projects: {
+      loading: true,
+      data: [],
+      pagination: {
+        currentPage: 1,
+        projectsPerPage: 10,
+      },
+      playAnimation: false,
     },
-    playAnimation: false,
-  });
-  const [polls, setPolls] = useState({
-    loading: true,
-    data: [],
-    pagination: {
-      currentPage: 1,
-      pollsPerPage: 10,
+    polls: {
+      loading: true,
+      data: [],
+      pagination: {
+        currentPage: 1,
+        pollsPerPage: 10,
+      },
+      playAnimation: false,
     },
-    playAnimation: false,
   });
+  const [initialRenderCompleted, setInitialRenderCompleted] = useState(false);
   const alert = useAlert();
   const [activeTab, setActiveTab] = useState(0);
   const projectStyles = useSpring({
     from: { x: -100 },
     to: { x: 0 },
-    reset: projects.playAnimation,
-    onRest: () => {
-      setProjects({
-        ...projects,
-        playAnimation: false,
-      });
-    },
+    reset: state.projects.playAnimation,
   });
   const pollStyles = useSpring({
     from: { x: 100 },
     to: { x: 0 },
-    reset: polls.playAnimation,
-    onRest: () => {
-      setPolls({
-        ...polls,
-        playAnimation: false,
-      });
-    },
+    reset: state.polls.playAnimation,
   });
 
   useEffect(() => {
-    if (projects.loading || polls.loading) {
+    if (state.projects.loading || state.polls.loading) {
       return false;
     }
     if (activeTab === 0) {
-      return setProjects({
-        ...projects,
-        playAnimation: true,
+      setState({
+        ...state,
+        projects: {
+          ...state.projects,
+          playAnimation: true,
+        },
       });
     }
     if (activeTab === 1) {
-      return setPolls({
-        ...polls,
-        playAnimation: true,
+      setState({
+        ...state,
+        polls: {
+          ...state.polls,
+          playAnimation: true,
+        },
       });
     }
   }, [activeTab]);
 
   useEffect(() => {
-    if (state.admin.loggedIn) {
+    if (store.admin.loggedIn) {
       getProjects();
-      getPolls();
     }
-  }, [state.admin.loggedIn]);
+  }, [store.admin.loggedIn]);
+
+  useEffect(() => {
+    if (!state.projects.loading && !initialRenderCompleted) {
+      getPolls();
+      setInitialRenderCompleted(true);
+    }
+  }, [state.projects.loading]);
 
   const getProjects = async () => {
     try {
-      setProjects({
-        ...projects,
-        loading: true,
-        data: [],
-        playAnimation: false,
+      setState({
+        ...state,
+        projects: {
+          ...state.projects,
+          loading: true,
+          data: [],
+          playAnimation: true,
+        },
       });
+
       const response = await axios("/api/projects");
 
       if (response && response.data && response.data.projects) {
-        const { currentPage, projectsPerPage } = projects.pagination;
+        const { currentPage, projectsPerPage } = state.projects.pagination;
 
         const indexOfLastProject = currentPage * projectsPerPage;
         const indexOfFirstProject = indexOfLastProject - projectsPerPage;
@@ -110,35 +117,45 @@ export default function AdminHome() {
 
         if (
           currentProjects.length === 0 &&
-          projects.pagination.currentPage !== 1
+          state.projects.pagination.currentPage !== 1
         ) {
-          return setProjects({
-            ...projects,
-            pagination: {
-              ...projects.pagination,
-              currentPage: projects.pagination.currentPage - 1,
+          return setState({
+            ...state,
+            projects: {
+              ...state.projects,
+              loading: false,
+              data: response.data.projects.sort(
+                (a, b) => a.sort_order - b.sort_order
+              ),
+              pagination: {
+                ...state.projects.pagination,
+                currentPage: state.projects.pagination.currentPage - 1,
+              },
+              playAnimation: true,
             },
+          });
+        }
+
+        setState({
+          ...state,
+          projects: {
+            ...state.projects,
             loading: false,
             data: response.data.projects.sort(
               (a, b) => a.sort_order - b.sort_order
             ),
             playAnimation: true,
-          });
-        }
-        setProjects({
-          ...projects,
-          loading: false,
-          data: response.data.projects.sort(
-            (a, b) => a.sort_order - b.sort_order
-          ),
-          playAnimation: true,
+          },
         });
       }
     } catch (e) {
       if (e.response && e.response.data && e.response.data.message) {
-        setProjects({
-          ...projects,
-          loading: false,
+        setState({
+          ...state,
+          projects: {
+            ...state.projects,
+            loading: false,
+          },
         });
         alert.error(e.response.data.message);
       }
@@ -147,16 +164,23 @@ export default function AdminHome() {
 
   const getPolls = async () => {
     try {
-      setPolls({
-        ...polls,
-        loading: true,
-        data: [],
-        playAnimation: false,
+      setState({
+        ...state,
+        polls: {
+          ...state.polls,
+          loading: true,
+          data: [],
+          playAnimation: true,
+        },
+        projects: {
+          ...state.projects,
+          playAnimation: false,
+        },
       });
       const response = await axios("/api/polls");
 
       if (response && response.data && response.data.polls) {
-        const { currentPage, pollsPerPage } = polls.pagination;
+        const { currentPage, pollsPerPage } = state.polls.pagination;
 
         const indexOfLastPoll = currentPage * pollsPerPage;
         const indexOfFirstPoll = indexOfLastPoll - pollsPerPage;
@@ -165,33 +189,55 @@ export default function AdminHome() {
           indexOfLastPoll
         );
 
-        if (currentPolls.length === 0 && polls.pagination.currentPage !== 1) {
-          return setPolls({
-            ...polls,
+        if (
+          currentPolls.length === 0 &&
+          state.polls.pagination.currentPage !== 1
+        ) {
+          return setState({
+            ...state,
+            polls: {
+              ...state.polls,
+              loading: false,
+              data: response.data.polls.sort(
+                (a, b) => a.sort_order - b.sort_order
+              ),
+              pagination: {
+                ...state.polls.pagination,
+                currentPage: state.polls.pagination.currentPage - 1,
+              },
+              playAnimation: true,
+            },
+            projects: {
+              ...state.projects,
+              playAnimation: false,
+            },
+          });
+        }
+
+        setState({
+          ...state,
+          polls: {
+            ...state.polls,
             loading: false,
             data: response.data.polls.sort(
               (a, b) => a.sort_order - b.sort_order
             ),
-            pagination: {
-              ...polls.pagination,
-              currentPage: polls.pagination.currentPage - 1,
-            },
             playAnimation: true,
-          });
-        }
-
-        setPolls({
-          ...polls,
-          loading: false,
-          data: response.data.polls.sort((a, b) => a.sort_order - b.sort_order),
-          playAnimation: true,
+          },
+          projects: {
+            ...state.projects,
+            playAnimation: false,
+          },
         });
       }
     } catch (e) {
       if (e.response && e.response.data && e.response.data.message) {
-        setPolls({
-          ...polls,
-          loading: false,
+        setState({
+          ...state,
+          polls: {
+            ...state.polls,
+            loading: false,
+          },
         });
         alert.error(e.response.data.message);
       }
@@ -207,9 +253,12 @@ export default function AdminHome() {
       }
     } catch (e) {
       if (e.response && e.response.data && e.response.data.message) {
-        setProjects({
-          ...projects,
-          loading: false,
+        setState({
+          ...state,
+          projects: {
+            ...state.projects,
+            loading: false,
+          },
         });
         alert.error(e.response.data.message);
       }
@@ -225,8 +274,12 @@ export default function AdminHome() {
       }
     } catch (e) {
       if (e.response && e.response.data && e.response.data.message) {
-        setPolls({
-          loading: false,
+        setState({
+          ...state,
+          polls: {
+            ...state.polls,
+            loading: false,
+          },
         });
         alert.error(e.response.data.message);
       }
@@ -234,29 +287,29 @@ export default function AdminHome() {
   };
 
   const renderProjects = useMemo(() => {
-    const { currentPage, projectsPerPage } = projects.pagination;
+    const { currentPage, projectsPerPage } = state.projects.pagination;
     const indexOfLastProject = currentPage * projectsPerPage;
     const indexOfFirstProject = indexOfLastProject - projectsPerPage;
-    const currentProjects = projects.data.slice(
+    const currentProjects = state.projects.data.slice(
       indexOfFirstProject,
       indexOfLastProject
     );
 
-    if (projects.loading) {
+    if (state.projects.loading) {
       return (
         <Dimmer active inverted style={{ background: "#fff", minHeight: 300 }}>
           <Loader size="medium">Loading</Loader>
         </Dimmer>
       );
     }
-    if (projects.data && projects.data.length === 0) {
+    if (state.projects.data && state.projects.data.length === 0) {
       return (
         <div style={{ padding: 15, textAlign: "center" }}>
           <Header>There is no project</Header>
         </div>
       );
     }
-    if (projects.data && projects.data.length > 0) {
+    if (state.projects.data && state.projects.data.length > 0) {
       return currentProjects.map((project) => {
         return (
           <Table.Row key={project._id}>
@@ -283,46 +336,51 @@ export default function AdminHome() {
       });
     }
     return null;
-  }, [projects]);
+  }, [state.projects]);
 
   const getProjectsPaginationCount = useMemo(() => {
-    if (projects.loading || projects.data.length === 0) {
+    if (state.projects.loading || state.projects.data.length === 0) {
       return 1;
     }
     const pageNumbers = [];
     for (
       let i = 1;
       i <=
-      Math.ceil(projects.data.length / projects.pagination.projectsPerPage);
+      Math.ceil(
+        state.projects.data.length / state.projects.pagination.projectsPerPage
+      );
       i++
     ) {
       pageNumbers.push(i);
     }
     return pageNumbers.length;
-  }, [projects]);
+  }, [state.projects]);
 
   const renderPolls = useMemo(() => {
-    const { currentPage, pollsPerPage } = polls.pagination;
+    const { currentPage, pollsPerPage } = state.polls.pagination;
 
     const indexOfLastPoll = currentPage * pollsPerPage;
     const indexOfFirstPoll = indexOfLastPoll - pollsPerPage;
-    const currentPolls = polls.data.slice(indexOfFirstPoll, indexOfLastPoll);
+    const currentPolls = state.polls.data.slice(
+      indexOfFirstPoll,
+      indexOfLastPoll
+    );
 
-    if (polls.loading) {
+    if (state.polls.loading) {
       return (
         <Dimmer active inverted style={{ background: "#fff", minHeight: 300 }}>
           <Loader size="medium">Loading</Loader>
         </Dimmer>
       );
     }
-    if (polls.data && polls.data.length === 0) {
+    if (state.polls.data && state.polls.data.length === 0) {
       return (
         <div style={{ padding: 15, textAlign: "center" }}>
           <Header>There is no poll</Header>
         </div>
       );
     }
-    if (polls.data && polls.data.length > 0) {
+    if (state.polls.data && state.polls.data.length > 0) {
       return currentPolls.map((poll) => {
         return (
           <Table.Row key={poll._id}>
@@ -349,31 +407,32 @@ export default function AdminHome() {
       });
     }
     return null;
-  }, [polls]);
+  }, [state.polls]);
 
   const getPollsPaginationCount = useMemo(() => {
-    if (polls.loading || polls.data.length === 0) {
+    if (state.polls.loading || state.polls.data.length === 0) {
       return 1;
     }
     const pageNumbers = [];
     for (
       let i = 1;
-      i <= Math.ceil(polls.data.length / polls.pagination.pollsPerPage);
+      i <=
+      Math.ceil(state.polls.data.length / state.polls.pagination.pollsPerPage);
       i++
     ) {
       pageNumbers.push(i);
     }
     return pageNumbers.length;
-  }, [polls]);
+  }, [state.polls]);
 
   return (
     <div className="admin-homepage">
-      {state.admin.loggedIn ? (
+      {store.admin.loggedIn ? (
         <>
           <div className="tabs-options">
             <div
               onClick={() => {
-                if (activeTab === 0 && !projects.loading) {
+                if (activeTab === 0 && !state.projects.loading) {
                   return getProjects();
                 }
                 setActiveTab(0);
@@ -391,7 +450,7 @@ export default function AdminHome() {
                 active: activeTab === 1,
               })}
               onClick={() => {
-                if (activeTab === 1 && !polls.loading) {
+                if (activeTab === 1 && !state.polls.loading) {
                   return getPolls();
                 }
                 setActiveTab(1);
@@ -458,7 +517,7 @@ export default function AdminHome() {
                   <Table.Row>
                     <Table.HeaderCell colSpan="3" textAlign="right">
                       <Pagination
-                        activePage={projects.pagination.currentPage}
+                        activePage={state.projects.pagination.currentPage}
                         onPageChange={(_, page) => {
                           setProjects({
                             ...projects,
@@ -553,7 +612,7 @@ export default function AdminHome() {
                   <Table.Row>
                     <Table.HeaderCell colSpan="3" textAlign="right">
                       <Pagination
-                        activePage={polls.pagination.currentPage}
+                        activePage={state.polls.pagination.currentPage}
                         onPageChange={(_, page) => {
                           setPolls({
                             ...polls,

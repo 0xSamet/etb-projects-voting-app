@@ -60,29 +60,11 @@ export default function Home() {
     from: { x: -100 },
     to: { x: 0 },
     reset: state.projects.playAnimation,
-    // onRest: () => {
-    //   setState({
-    //     ...state,
-    //     projects: {
-    //       ...state.projects,
-    //       playAnimation: false,
-    //     },
-    //   });
-    // },
   });
   const pollStyles = useSpring({
     from: { x: 100 },
     to: { x: 0 },
     reset: state.polls.playAnimation,
-    // onRest: () => {
-    //   setState({
-    //     ...state,
-    //     polls: {
-    //       ...state.polls,
-    //       playAnimation: false,
-    //     },
-    //   });
-    // },
   });
 
   useEffect(() => {
@@ -131,19 +113,20 @@ export default function Home() {
     }
   }, [state.projects.loading]);
 
-  const getProjects = () => {
-    // try {
-    setState({
-      ...state,
-      projects: {
-        ...state.projects,
-        loading: true,
-        data: [],
-        playAnimation: false,
-      },
-    });
+  const getProjects = async () => {
+    try {
+      setState({
+        ...state,
+        projects: {
+          ...state.projects,
+          loading: true,
+          data: [],
+          playAnimation: true,
+        },
+      });
 
-    axios("/api/projects").then((response) => {
+      const response = await axios("/api/projects");
+
       if (response && response.data && response.data.projects) {
         setState({
           ...state,
@@ -167,40 +150,39 @@ export default function Home() {
           },
         });
       }
-    });
-
-    //   } catch (e) {
-    //     if (e.response && e.response.data && e.response.data.message) {
-    //       setState({
-    //         ...state,
-    //         projects: {
-    //           ...state.projects,
-    //           loading: false,
-    //         },
-    //       });
-    //       return alert.error(e.response.data.message);
-    //     }
-    //     return alert.error(e.message);
-    //   }
+    } catch (e) {
+      if (e.response && e.response.data && e.response.data.message) {
+        setState({
+          ...state,
+          projects: {
+            ...state.projects,
+            loading: false,
+          },
+        });
+        return alert.error(e.response.data.message);
+      }
+      return alert.error(e.message);
+    }
   };
 
-  const getPolls = () => {
-    // try {
-    setState({
-      ...state,
-      polls: {
-        ...state.polls,
-        loading: true,
-        data: [],
-        playAnimation: false,
-      },
-      projects: {
-        ...state.projects,
-        playAnimation: false,
-      },
-    });
+  const getPolls = async () => {
+    try {
+      setState({
+        ...state,
+        polls: {
+          ...state.polls,
+          loading: true,
+          data: [],
+          playAnimation: true,
+        },
+        projects: {
+          ...state.projects,
+          playAnimation: false,
+        },
+      });
 
-    axios("/api/polls").then((response) => {
+      const response = await axios("/api/polls");
+
       if (response && response.data && response.data.polls) {
         setState({
           ...state,
@@ -228,23 +210,21 @@ export default function Home() {
           },
         });
       }
-    });
+    } catch (e) {
+      if (e.response && e.response.data && e.response.data.message) {
+        setState({
+          ...state,
+          polls: {
+            ...state.polls,
+            loading: false,
+          },
+        });
 
-    // } catch (e) {
-    // if (e.response && e.response.data && e.response.data.message) {
-    //   setState({
-    //     ...state,
-    //     polls: {
-    //       ...state.polls,
-    //       loading: false,
-    //     },
-    //   });
-
-    //   return alert.error(e.response.data.message);
-    // }
-    // console.log("error", e);
-    // return alert.error(e.message);
-    // }
+        return alert.error(e.response.data.message);
+      }
+      console.log("error", e);
+      return alert.error(e.message);
+    }
   };
 
   const renderProjects = useMemo(() => {
@@ -590,7 +570,7 @@ export default function Home() {
         </div>
       </div>
       <Divider />
-      {activeTab === 0 && !state.projects.loading && (
+      {activeTab === 0 && (
         <>
           <animated.div
             className="ui padded equal width grid projects"
@@ -639,7 +619,7 @@ export default function Home() {
           </div>
         </>
       )}
-      {activeTab === 1 && !state.polls.loading && (
+      {activeTab === 1 && (
         <>
           <animated.div
             className="ui padded equal width grid polls"
