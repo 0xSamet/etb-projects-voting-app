@@ -28,25 +28,27 @@ import Countdown from "react-countdown";
 import useWindowSize from "../hooks/useWindowSize";
 
 export default function Home() {
-  const [projects, setProjects] = useState({
-    loading: true,
-    data: [],
-    pagination: {
-      currentPage: 1,
-      projectsPerPage: 6,
+  const [state, setState] = useState({
+    projects: {
+      loading: true,
+      data: [],
+      pagination: {
+        currentPage: 1,
+        projectsPerPage: 6,
+      },
+      playAnimation: false,
     },
-    playAnimation: false,
-  });
-  const [polls, setPolls] = useState({
-    loading: true,
-    data: [],
-    pagination: {
-      currentPage: 1,
-      pollsPerPage: 5,
+    polls: {
+      loading: true,
+      data: [],
+      pagination: {
+        currentPage: 1,
+        pollsPerPage: 5,
+      },
+      playAnimation: false,
     },
-    playAnimation: false,
   });
-
+  const [initialRenderCompleted, setInitialRenderCompleted] = useState(false);
   const alert = useAlert();
   const { walletConnect } = useWalletConnect();
   const dispatch = useDispatch();
@@ -57,43 +59,31 @@ export default function Home() {
   const projectStyles = useSpring({
     from: { x: -100 },
     to: { x: 0 },
-    reset: projects.playAnimation,
-    onRest: () => {
-      setProjects({
-        ...projects,
-        playAnimation: false,
-      });
-    },
+    reset: state.projects.playAnimation,
+    // onRest: () => {
+    //   setState({
+    //     ...state,
+    //     projects: {
+    //       ...state.projects,
+    //       playAnimation: false,
+    //     },
+    //   });
+    // },
   });
   const pollStyles = useSpring({
     from: { x: 100 },
     to: { x: 0 },
-    reset: polls.playAnimation,
-    onRest: () => {
-      setPolls({
-        ...polls,
-        playAnimation: false,
-      });
-    },
+    reset: state.polls.playAnimation,
+    // onRest: () => {
+    //   setState({
+    //     ...state,
+    //     polls: {
+    //       ...state.polls,
+    //       playAnimation: false,
+    //     },
+    //   });
+    // },
   });
-
-  useEffect(() => {
-    if (projects.loading || polls.loading) {
-      return false;
-    }
-    if (activeTab === 0) {
-      setProjects({
-        ...projects,
-        playAnimation: true,
-      });
-    }
-    if (activeTab === 1) {
-      setPolls({
-        ...polls,
-        playAnimation: true,
-      });
-    }
-  }, [activeTab]);
 
   useEffect(() => {
     if (walletConnect.connected) {
@@ -108,107 +98,165 @@ export default function Home() {
     }
 
     getProjects();
-    getPolls();
   }, []);
 
-  const getProjects = async () => {
-    try {
-      setProjects({
-        ...projects,
+  useEffect(() => {
+    if (state.projects.loading || state.polls.loading) {
+      return false;
+    }
+    if (activeTab === 0) {
+      setState({
+        ...state,
+        projects: {
+          ...state.projects,
+          playAnimation: true,
+        },
+      });
+    }
+    if (activeTab === 1) {
+      setState({
+        ...state,
+        polls: {
+          ...state.polls,
+          playAnimation: true,
+        },
+      });
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (!state.projects.loading && !initialRenderCompleted) {
+      getPolls();
+      setInitialRenderCompleted(true);
+    }
+  }, [state.projects.loading]);
+
+  const getProjects = () => {
+    // try {
+    setState({
+      ...state,
+      projects: {
+        ...state.projects,
         loading: true,
         data: [],
         playAnimation: false,
-      });
-      const response = await axios("/api/projects");
+      },
+    });
 
+    axios("/api/projects").then((response) => {
       if (response && response.data && response.data.projects) {
-        setProjects({
-          ...projects,
-          loading: false,
-          data: response.data.projects
-            .sort((a, b) => a.sort_order - b.sort_order)
-            .map((project, i) => {
-              const currentDate = new Date().getTime();
-              const isVotingStarted = currentDate - project.start_date > 0;
-              const isVotingEnded = project.end_date - currentDate < 0;
+        setState({
+          ...state,
+          projects: {
+            ...state.projects,
+            loading: false,
+            data: response.data.projects
+              .sort((a, b) => a.sort_order - b.sort_order)
+              .map((project, i) => {
+                const currentDate = new Date().getTime();
+                const isVotingStarted = currentDate - project.start_date > 0;
+                const isVotingEnded = project.end_date - currentDate < 0;
 
-              return {
-                ...project,
-                isVotingStarted,
-                isVotingEnded,
-              };
-            }),
-          playAnimation: true,
+                return {
+                  ...project,
+                  isVotingStarted,
+                  isVotingEnded,
+                };
+              }),
+            playAnimation: true,
+          },
         });
       }
-    } catch (e) {
-      if (e.response && e.response.data && e.response.data.message) {
-        setProjects({
-          ...projects,
-          loading: false,
-        });
-        return alert.error(e.response.data.message);
-      }
-      return alert.error(e.message);
-    }
+    });
+
+    //   } catch (e) {
+    //     if (e.response && e.response.data && e.response.data.message) {
+    //       setState({
+    //         ...state,
+    //         projects: {
+    //           ...state.projects,
+    //           loading: false,
+    //         },
+    //       });
+    //       return alert.error(e.response.data.message);
+    //     }
+    //     return alert.error(e.message);
+    //   }
   };
 
-  const getPolls = async () => {
-    try {
-      setProjects({
-        ...projects,
-        playAnimation: false,
-      });
-      setPolls({
-        ...polls,
+  const getPolls = () => {
+    // try {
+    setState({
+      ...state,
+      polls: {
+        ...state.polls,
         loading: true,
         data: [],
         playAnimation: false,
-      });
-      const response = await axios("/api/polls");
+      },
+      projects: {
+        ...state.projects,
+        playAnimation: false,
+      },
+    });
 
+    axios("/api/polls").then((response) => {
       if (response && response.data && response.data.polls) {
-        setPolls({
-          ...polls,
-          loading: false,
-          data: response.data.polls
-            .sort((a, b) => a.sort_order - b.sort_order)
-            .map((poll, i) => {
-              const currentDate = new Date().getTime();
-              const isVotingStarted = currentDate - poll.start_date > 0;
-              const isVotingEnded = poll.end_date - currentDate < 0;
+        setState({
+          ...state,
+          polls: {
+            ...state.polls,
+            loading: false,
+            data: response.data.polls
+              .sort((a, b) => a.sort_order - b.sort_order)
+              .map((poll, i) => {
+                const currentDate = new Date().getTime();
+                const isVotingStarted = currentDate - poll.start_date > 0;
+                const isVotingEnded = poll.end_date - currentDate < 0;
 
-              return {
-                ...poll,
-                isVotingStarted,
-                isVotingEnded,
-              };
-            }),
-          playAnimation: false,
+                return {
+                  ...poll,
+                  isVotingStarted,
+                  isVotingEnded,
+                };
+              }),
+            playAnimation: true,
+          },
+          projects: {
+            ...state.projects,
+            playAnimation: false,
+          },
         });
       }
-    } catch (e) {
-      if (e.response && e.response.data && e.response.data.message) {
-        setPolls({
-          ...polls,
-          loading: false,
-        });
-        return alert.error(e.response.data.message);
-      }
-      return alert.error(e.message);
-    }
+    });
+
+    // } catch (e) {
+    // if (e.response && e.response.data && e.response.data.message) {
+    //   setState({
+    //     ...state,
+    //     polls: {
+    //       ...state.polls,
+    //       loading: false,
+    //     },
+    //   });
+
+    //   return alert.error(e.response.data.message);
+    // }
+    // console.log("error", e);
+    // return alert.error(e.message);
+    // }
   };
 
   const renderProjects = useMemo(() => {
-    const { currentPage, projectsPerPage } = projects.pagination;
+    const { currentPage, projectsPerPage } = state.projects.pagination;
     const indexOfLastProject = currentPage * projectsPerPage;
     const indexOfFirstProject = indexOfLastProject - projectsPerPage;
-    const currentProjects = projects.data.slice(
+    const currentProjects = state.projects.data.slice(
       indexOfFirstProject,
       indexOfLastProject
     );
 
-    if (projects.loading) {
+    if (state.projects.loading) {
       return (
         <>
           <div style={{ minHeight: 500 }}></div>
@@ -218,7 +266,7 @@ export default function Home() {
         </>
       );
     }
-    if (projects.data && projects.data.length === 0) {
+    if (state.projects.data && state.projects.data.length === 0) {
       return (
         <div
           style={{
@@ -247,7 +295,7 @@ export default function Home() {
       );
     };
 
-    if (projects.data && projects.data.length > 0) {
+    if (state.projects.data && state.projects.data.length > 0) {
       return currentProjects.map((project, projectIndex) => {
         let topButtonText = "";
         let topButtonIcon = <Icon name="chart pie" />;
@@ -344,31 +392,36 @@ export default function Home() {
       });
     }
     return null;
-  }, [projects, windowSize]);
+  }, [state.projects, windowSize]);
 
   const getProjectsPaginationCount = useMemo(() => {
-    if (projects.loading || projects.data.length === 0) {
+    if (state.projects.loading || state.projects.data.length === 0) {
       return 1;
     }
     const pageNumbers = [];
     for (
       let i = 1;
       i <=
-      Math.ceil(projects.data.length / projects.pagination.projectsPerPage);
+      Math.ceil(
+        state.projects.data.length / state.projects.pagination.projectsPerPage
+      );
       i++
     ) {
       pageNumbers.push(i);
     }
     return pageNumbers.length;
-  }, [projects]);
+  }, [state.projects]);
 
   const renderPolls = useMemo(() => {
-    const { currentPage, pollsPerPage } = polls.pagination;
+    const { currentPage, pollsPerPage } = state.polls.pagination;
     const indexOfLastPoll = currentPage * pollsPerPage;
     const indexOfFirstPoll = indexOfLastPoll - pollsPerPage;
-    const currentPolls = polls.data.slice(indexOfFirstPoll, indexOfLastPoll);
+    const currentPolls = state.polls.data.slice(
+      indexOfFirstPoll,
+      indexOfLastPoll
+    );
 
-    if (polls.loading) {
+    if (state.polls.loading) {
       return (
         <>
           <div style={{ minHeight: 500 }}></div>
@@ -378,7 +431,7 @@ export default function Home() {
         </>
       );
     }
-    if (polls.data && polls.data.length === 0) {
+    if (state.polls.data && state.polls.data.length === 0) {
       return (
         <div
           style={{
@@ -405,7 +458,7 @@ export default function Home() {
         </p>
       );
     };
-    if (polls.data && polls.data.length > 0) {
+    if (state.polls.data && state.polls.data.length > 0) {
       return currentPolls.map((poll, pollIndex) => {
         let topButtonText = "";
         let topButtonIcon = <Icon name="chart pie" />;
@@ -484,31 +537,32 @@ export default function Home() {
       });
     }
     return null;
-  }, [polls, windowSize]);
+  }, [state.polls, windowSize]);
 
   const getPollsPaginationCount = useMemo(() => {
-    if (polls.loading || polls.data.length === 0) {
+    if (state.polls.loading || state.polls.data.length === 0) {
       return 1;
     }
 
     const pageNumbers = [];
     for (
       let i = 1;
-      i <= Math.ceil(polls.data.length / polls.pagination.pollsPerPage);
+      i <=
+      Math.ceil(state.polls.data.length / state.polls.pagination.pollsPerPage);
       i++
     ) {
       pageNumbers.push(i);
     }
 
     return pageNumbers.length;
-  }, [polls]);
+  }, [state.polls]);
 
   return (
     <div className="homepage">
       <div className="tabs-options">
         <div
           onClick={() => {
-            if (activeTab === 0 && !projects.loading) {
+            if (activeTab === 0 && !state.projects.loading) {
               return getProjects();
             }
             setActiveTab(0);
@@ -526,7 +580,7 @@ export default function Home() {
             active: activeTab === 1,
           })}
           onClick={() => {
-            if (activeTab === 1 && !polls.loading) {
+            if (activeTab === 1 && !state.polls.loading) {
               return getPolls();
             }
             setActiveTab(1);
@@ -536,7 +590,7 @@ export default function Home() {
         </div>
       </div>
       <Divider />
-      {activeTab === 0 && !projects.loading && (
+      {activeTab === 0 && !state.projects.loading && (
         <>
           <animated.div
             className="ui padded equal width grid projects"
@@ -547,13 +601,16 @@ export default function Home() {
           <Divider />
           <div className="pagination">
             <Pagination
-              activePage={projects.pagination.currentPage}
+              activePage={state.projects.pagination.currentPage}
               onPageChange={(_, page) => {
-                setProjects({
-                  ...projects,
-                  pagination: {
-                    ...projects.pagination,
-                    currentPage: page.activePage,
+                setState({
+                  ...state,
+                  projects: {
+                    ...state.projects,
+                    pagination: {
+                      ...state.projects.pagination,
+                      currentPage: page.activePage,
+                    },
                   },
                 });
               }}
@@ -582,7 +639,7 @@ export default function Home() {
           </div>
         </>
       )}
-      {activeTab === 1 && !polls.loading && (
+      {activeTab === 1 && !state.polls.loading && (
         <>
           <animated.div
             className="ui padded equal width grid polls"
@@ -593,13 +650,16 @@ export default function Home() {
           <Divider />
           <div className="pagination">
             <Pagination
-              activePage={polls.pagination.currentPage}
+              activePage={state.polls.pagination.currentPage}
               onPageChange={(_, page) => {
-                setPolls({
-                  ...polls,
-                  pagination: {
-                    ...polls.pagination,
-                    currentPage: page.activePage,
+                setState({
+                  ...state,
+                  polls: {
+                    ...state.polls,
+                    pagination: {
+                      ...state.polls.pagination,
+                      currentPage: page.activePage,
+                    },
                   },
                 });
               }}
