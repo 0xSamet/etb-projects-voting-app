@@ -203,7 +203,7 @@ export default function Loginform() {
             </Form.Field>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <Button primary type="submit">
-                Login
+                Register
               </Button>
             </div>
           </Form>

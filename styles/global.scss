@@ -1038,6 +1038,13 @@ a {
       }
     }
   }
+  .not-found-page {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 100px 0px;
+  }
   footer {
     display: flex;
     padding: 15px;

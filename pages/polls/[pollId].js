@@ -581,7 +581,9 @@ export default function PollDetail() {
             <Countdown
               date={Number(poll.end_date)}
               renderer={countDownRenderer}
-              onComplete={() => getPoll()}
+              onComplete={() => {
+                setTimeout(() => getPoll(), 1000);
+              }}
             />
           </span>
         </>
@@ -595,7 +597,9 @@ export default function PollDetail() {
           <Countdown
             date={Number(poll.start_date)}
             renderer={countDownRenderer}
-            onComplete={() => getPoll()}
+            onComplete={() => {
+              setTimeout(() => getPoll(), 1000);
+            }}
           />
         </span>
       </>

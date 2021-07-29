@@ -292,7 +292,9 @@ export default function Home() {
             <Countdown
               date={Number(project.end_date)}
               renderer={renderer}
-              onComplete={() => getProjects()}
+              onComplete={() => {
+                setTimeout(() => getProjects(), 1000);
+              }}
             />
           );
         } else {
@@ -302,7 +304,9 @@ export default function Home() {
             <Countdown
               date={Number(project.start_date)}
               renderer={renderer}
-              onComplete={() => getProjects()}
+              onComplete={() => {
+                setTimeout(() => getProjects(), 1000);
+              }}
             />
           );
           topButtonIcon = <Icon name="search" />;
@@ -454,7 +458,9 @@ export default function Home() {
             <Countdown
               date={Number(poll.end_date)}
               renderer={renderer}
-              onComplete={() => getPolls()}
+              onComplete={() => {
+                setTimeout(() => getPolls(), 1000);
+              }}
             />
           );
         } else {
@@ -464,7 +470,9 @@ export default function Home() {
             <Countdown
               date={Number(poll.start_date)}
               renderer={renderer}
-              onComplete={() => getPolls()}
+              onComplete={() => {
+                setTimeout(() => getPolls(), 1000);
+              }}
             />
           );
           topButtonIcon = <Icon name="search" />;

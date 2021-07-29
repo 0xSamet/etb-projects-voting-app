@@ -608,7 +608,9 @@ export default function ProjectDetail() {
             <Countdown
               date={Number(project.end_date)}
               renderer={countDownRenderer}
-              onComplete={() => getProject()}
+              onComplete={() => {
+                setTimeout(() => getProject(), 1000);
+              }}
             />
           </span>
         </>
@@ -622,7 +624,9 @@ export default function ProjectDetail() {
           <Countdown
             date={Number(project.start_date)}
             renderer={countDownRenderer}
-            onComplete={() => getProject()}
+            onComplete={() => {
+              setTimeout(() => getProject(), 1000);
+            }}
           />
         </span>
       </>

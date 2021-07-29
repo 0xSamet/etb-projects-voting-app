@@ -160,7 +160,7 @@ export default function AdminEditPoll() {
               />
             </Form.Field>
             <Form.Field>
-              <label>Project Name</label>
+              <label>Poll Name</label>
               <input
                 type="text"
                 name="name"
