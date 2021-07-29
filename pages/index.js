@@ -1,4 +1,3 @@
-import Head from "next/head";
 import Link from "next/link";
 import { useState, useMemo, useEffect } from "react";
 import {
@@ -13,17 +12,13 @@ import {
 } from "semantic-ui-react";
 import axios from "axios";
 import { useAlert } from "react-alert";
-import EditorView from "../components/EditorView";
-import { convertFromRaw, Editor, EditorState } from "draft-js";
-import { userLoginSuccess, userLogout } from "../store";
+import { userLoginSuccess } from "../store";
 import { useWalletConnect } from "../lib/walletConnect";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/router";
 import clsx from "clsx";
 import { animated, useSpring } from "react-spring";
-import produce from "immer";
 import moment from "moment";
-import numeral from "numeral";
 import Countdown from "react-countdown";
 import useWindowSize from "../hooks/useWindowSize";
 

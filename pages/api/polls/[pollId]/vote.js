@@ -6,7 +6,6 @@ import { recoverPersonalSignature } from "eth-sig-util";
 import { convertUtf8ToHex } from "@walletconnect/utils";
 import axios from "axios";
 import BigNumber from "bignumber.js";
-import Web3 from "web3";
 
 const votePollSchema = Joi.object({
   signature: Joi.string().required().trim(),
@@ -47,13 +46,15 @@ export default async (req, res) => {
         }
       } catch (err) {
         console.log(err);
-        console.log(JSON.stringify(err));
         return res.status(err.response.status).json(err.response.data);
       }
 
-      if (tokenHave < BigNumber("0.1")) {
+      if (
+        process.env.VOTING_MIN_TOKEN &&
+        tokenHave < BigNumber(process.env.VOTING_MIN_TOKEN)
+      ) {
         return res.status(422).json({
-          message: "You need atleast 0.1 Etb Token To Vote",
+          message: `You need atleast ${process.env.VOTING_MIN_TOKEN} Etb Token To Vote`,
         });
       }
 
@@ -97,7 +98,7 @@ export default async (req, res) => {
 
       if (isVotingEnded) {
         return res.status(422).json({
-          message: "Voting end!",
+          message: "Voting ended!",
         });
       }
 

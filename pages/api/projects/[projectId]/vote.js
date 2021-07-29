@@ -6,7 +6,6 @@ import { recoverPersonalSignature } from "eth-sig-util";
 import { convertUtf8ToHex } from "@walletconnect/utils";
 import axios from "axios";
 import BigNumber from "bignumber.js";
-import Web3 from "web3";
 
 const voteProjectSchema = Joi.object({
   signature: Joi.string().required().trim(),
@@ -56,7 +55,7 @@ export default async (req, res) => {
         tokenHave < BigNumber(process.env.VOTING_MIN_TOKEN)
       ) {
         return res.status(422).json({
-          message: "You need atleast 0.1 Etb Token To Vote",
+          message: `You need atleast ${process.env.VOTING_MIN_TOKEN} Etb Token To Vote`,
         });
       }
 
@@ -99,7 +98,7 @@ export default async (req, res) => {
       }
       if (isVotingEnded) {
         return res.status(422).json({
-          message: "Voting end!",
+          message: "Voting ended!",
         });
       }
 
@@ -123,13 +122,6 @@ export default async (req, res) => {
           message: "Participant Not Found!",
         });
       }
-
-      // console.log({
-      //   tokenHave,
-      //   partiCount: participantInDb.voteCount,
-      //   bigpartiCount: BigNumber(participantInDb.voteCount),
-      //   a: BigNumber(participantInDb.voteCount).plus(tokenHave),
-      // });
 
       participantInDb.voteCount = BigNumber(participantInDb.voteCount)
         .plus(tokenHave)

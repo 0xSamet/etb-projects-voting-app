@@ -1,8 +1,6 @@
 import { authenticateAdmin, setDefaultHeaders } from "../../../middleware";
 import Joi from "joi";
-
 import connectDb from "../../../db/connect";
-
 import Poll from "../../../db/models/Poll";
 
 const addPollSchema = Joi.object({

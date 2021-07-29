@@ -1,8 +1,6 @@
 import { authenticateAdmin, setDefaultHeaders } from "../../../../middleware";
-import Joi, { types } from "joi";
-
+import Joi from "joi";
 import connectDb from "../../../../db/connect";
-
 import Project from "../../../../db/models/Project";
 import { Types } from "mongoose";
 

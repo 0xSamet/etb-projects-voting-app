@@ -13,7 +13,6 @@ import {
 import { Pie } from "react-chartjs-2";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
-import { EditorState } from "draft-js";
 import axios from "axios";
 import EditorView from "../../components/EditorView";
 import randomColor from "randomcolor";
@@ -24,7 +23,7 @@ import { useWalletConnect } from "../../lib/walletConnect";
 import { convertUtf8ToHex } from "@walletconnect/utils";
 import { userLoginSuccess, userLogout } from "../../store";
 import { recoverPersonalSignature } from "eth-sig-util";
-import { useSpring, useSprings, animated } from "react-spring";
+import { useSprings, animated } from "react-spring";
 import moment from "moment";
 import BigNumber from "bignumber.js";
 import Countdown from "react-countdown";
