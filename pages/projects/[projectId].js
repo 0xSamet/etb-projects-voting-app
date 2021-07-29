@@ -153,6 +153,9 @@ export default function ProjectDetail() {
         const response = await axios(`/api/projects/${router.query.projectId}`);
         await updateProjectWithTheGivenProject(response);
       } catch (e) {
+        if (e.response && e.response.status && e.response.status === 404) {
+          return router.push("/");
+        }
         if (e.response && e.response.data && e.response.data.message) {
           return alert.error(e.response.data.message);
         }
@@ -162,104 +165,94 @@ export default function ProjectDetail() {
   };
 
   const updateProjectWithTheGivenProject = async (response) => {
-    try {
-      if (response && response.data && response.data.project) {
-        let participantsUpdate = response.data.project.participants;
+    if (response && response.data && response.data.project) {
+      let participantsUpdate = response.data.project.participants;
 
-        participantsUpdate = participantsUpdate.map((p) => {
-          const participantId = p._id;
-          const tryFind = project.participants.find(
-            (p) => p._id === participantId
-          );
-          if (tryFind) {
-            return {
-              ...p,
-              color: tryFind.color,
-            };
-          } else {
-            const borderColor = randomColor({
-              format: "rgba",
-              alpha: 1,
-            });
-            const bgColor =
-              borderColor.substr(0, borderColor.length - 2) + "0.2)";
-
-            return {
-              ...p,
-              color: {
-                bg: bgColor,
-                border: borderColor,
-              },
-            };
-          }
-        });
-
-        const totalTokenVoted = response.data.project.participants
-          .map((p) => p.voteCount)
-          .reduce((a, b) => BigNumber(a).plus(b).toFixed(), "0");
-
-        // console.log(totalTokenVoted);
-
-        if (totalTokenVoted == 0) {
-          participantsUpdate = participantsUpdate.map((p) => {
-            return {
-              ...p,
-              votePercentage: "0",
-            };
-          });
+      participantsUpdate = participantsUpdate.map((p) => {
+        const participantId = p._id;
+        const tryFind = project.participants.find(
+          (p) => p._id === participantId
+        );
+        if (tryFind) {
+          return {
+            ...p,
+            color: tryFind.color,
+          };
         } else {
-          participantsUpdate = participantsUpdate.map((p) => {
-            const votePercentageNumber = BigNumber(p.voteCount)
-              .dividedBy(totalTokenVoted)
-              .multipliedBy(100)
-              .toFixed();
-
-            const votePercentageString = String(votePercentageNumber).substr(
-              0,
-              5
-            );
-
-            return {
-              ...p,
-              votePercentage: votePercentageString,
-            };
+          const borderColor = randomColor({
+            format: "rgba",
+            alpha: 1,
           });
+          const bgColor =
+            borderColor.substr(0, borderColor.length - 2) + "0.2)";
+
+          return {
+            ...p,
+            color: {
+              bg: bgColor,
+              border: borderColor,
+            },
+          };
         }
+      });
 
-        const currentDate = new Date().getTime();
-        const startDate = response.data.project.start_date;
-        const endDate = response.data.project.end_date;
+      const totalTokenVoted = response.data.project.participants
+        .map((p) => p.voteCount)
+        .reduce((a, b) => BigNumber(a).plus(b).toFixed(), "0");
 
-        setProject({
-          ...project,
-          ...response.data.project,
-          loading: false,
-          participants: participantsUpdate,
-          pieChartData: {
-            ...emptyPieChartData,
-            // labels: participantsUpdate.map((p) => p.author),
-            datasets: [
-              {
-                ...emptyPieChartData.datasets[0],
-                data: participantsUpdate.map((p) => Number(p.voteCount)),
-                backgroundColor: participantsUpdate.map((p) => p.color.bg),
-                borderColor: participantsUpdate.map((p) => p.color.border),
-              },
-            ],
-          },
-          isVotingStarted: currentDate - startDate > 0,
-          isVotingEnded: endDate - currentDate < 0,
+      // console.log(totalTokenVoted);
+
+      if (totalTokenVoted == 0) {
+        participantsUpdate = participantsUpdate.map((p) => {
+          return {
+            ...p,
+            votePercentage: "0",
+          };
         });
-        setAlreadyVotedLoading(false);
+      } else {
+        participantsUpdate = participantsUpdate.map((p) => {
+          const votePercentageNumber = BigNumber(p.voteCount)
+            .dividedBy(totalTokenVoted)
+            .multipliedBy(100)
+            .toFixed();
+
+          const votePercentageString = String(votePercentageNumber).substr(
+            0,
+            5
+          );
+
+          return {
+            ...p,
+            votePercentage: votePercentageString,
+          };
+        });
       }
-    } catch (e) {
-      if (e.response.status === 404) {
-        return router.push("/");
-      }
-      if (e.response && e.response.data && e.response.data.message) {
-        return alert.error(e.response.data.message);
-      }
-      return alert.error(e.message);
+
+      const currentDate = new Date().getTime();
+      const startDate = response.data.project.start_date;
+      const endDate = response.data.project.end_date;
+
+      setProject({
+        ...project,
+        ...response.data.project,
+        loading: false,
+        participants: participantsUpdate,
+        pieChartData: {
+          ...emptyPieChartData,
+          // labels: participantsUpdate.map((p) => p.author),
+          datasets: [
+            {
+              ...emptyPieChartData.datasets[0],
+              data: participantsUpdate.map((p) => Number(p.voteCount)),
+              backgroundColor: participantsUpdate.map((p) => p.color.bg),
+              borderColor: participantsUpdate.map((p) => p.color.border),
+            },
+          ],
+        },
+        isVotingStarted: currentDate - startDate > 0,
+        isVotingEnded: endDate - currentDate < 0,
+      });
+      setAlreadyVotedLoading(false);
     }
   };
 

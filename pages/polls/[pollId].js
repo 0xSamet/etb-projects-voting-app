@@ -152,6 +152,9 @@ export default function PollDetail() {
         const response = await axios(`/api/polls/${router.query.pollId}`);
         updatePollWithTheGivenPoll(response);
       } catch (e) {
+        if (e.response && e.response.status && e.response.status === 404) {
+          return router.push("/");
+        }
         if (e.response && e.response.data && e.response.data.message) {
           return alert.error(e.response.data.message);
         }
@@ -161,100 +164,90 @@ export default function PollDetail() {
   };
 
   const updatePollWithTheGivenPoll = (response) => {
-    try {
-      if (response && response.data && response.data.poll) {
-        let proposalsUpdate = response.data.poll.proposals;
+    if (response && response.data && response.data.poll) {
+      let proposalsUpdate = response.data.poll.proposals;
 
-        proposalsUpdate = proposalsUpdate.map((p) => {
-          const proposalId = p._id;
-          const tryFind = poll.proposals.find((c) => c._id === proposalId);
-          if (tryFind) {
-            return {
-              ...p,
-              color: tryFind.color,
-            };
-          } else {
-            const borderColor = randomColor({
-              format: "rgba",
-              alpha: 1,
-            });
-            const bgColor =
-              borderColor.substr(0, borderColor.length - 2) + "0.2)";
-
-            return {
-              ...p,
-              color: {
-                bg: bgColor,
-                border: borderColor,
-              },
-            };
-          }
-        });
-
-        const totalTokenVoted = response.data.poll.proposals
-          .map((p) => p.voteCount)
-          .reduce((a, b) => BigNumber(a).plus(b).toFixed(), "0");
-
-        if (totalTokenVoted == 0) {
-          proposalsUpdate = proposalsUpdate.map((p) => {
-            return {
-              ...p,
-              votePercentage: "0",
-            };
-          });
+      proposalsUpdate = proposalsUpdate.map((p) => {
+        const proposalId = p._id;
+        const tryFind = poll.proposals.find((c) => c._id === proposalId);
+        if (tryFind) {
+          return {
+            ...p,
+            color: tryFind.color,
+          };
         } else {
-          proposalsUpdate = proposalsUpdate.map((p) => {
-            const votePercentageNumber = BigNumber(p.voteCount)
-              .dividedBy(totalTokenVoted)
-              .multipliedBy(100)
-              .toFixed();
-
-            const votePercentageString = String(votePercentageNumber).substr(
-              0,
-              5
-            );
-
-            return {
-              ...p,
-              votePercentage: votePercentageString,
-            };
+          const borderColor = randomColor({
+            format: "rgba",
+            alpha: 1,
           });
+          const bgColor =
+            borderColor.substr(0, borderColor.length - 2) + "0.2)";
+
+          return {
+            ...p,
+            color: {
+              bg: bgColor,
+              border: borderColor,
+            },
+          };
         }
+      });
 
-        const currentDate = new Date().getTime();
-        const startDate = response.data.poll.start_date;
-        const endDate = response.data.poll.end_date;
+      const totalTokenVoted = response.data.poll.proposals
+        .map((p) => p.voteCount)
+        .reduce((a, b) => BigNumber(a).plus(b).toFixed(), "0");
 
-        setPoll({
-          ...poll,
-          ...response.data.poll,
-          loading: false,
-          proposals: proposalsUpdate,
-          pieChartData: {
-            ...emptyPieChartData,
-            // labels: proposalsUpdate.map((p) => p.text),
-            datasets: [
-              {
-                ...emptyPieChartData.datasets[0],
-                data: proposalsUpdate.map((p) => Number(p.voteCount)),
-                backgroundColor: proposalsUpdate.map((p) => p.color.bg),
-                borderColor: proposalsUpdate.map((p) => p.color.border),
-              },
-            ],
-          },
-          isVotingStarted: currentDate - startDate > 0,
-          isVotingEnded: endDate - currentDate < 0,
+      if (totalTokenVoted == 0) {
+        proposalsUpdate = proposalsUpdate.map((p) => {
+          return {
+            ...p,
+            votePercentage: "0",
+          };
         });
-        setAlreadyVotedLoading(false);
+      } else {
+        proposalsUpdate = proposalsUpdate.map((p) => {
+          const votePercentageNumber = BigNumber(p.voteCount)
+            .dividedBy(totalTokenVoted)
+            .multipliedBy(100)
+            .toFixed();
+
+          const votePercentageString = String(votePercentageNumber).substr(
+            0,
+            5
+          );
+
+          return {
+            ...p,
+            votePercentage: votePercentageString,
+          };
+        });
       }
-    } catch (e) {
-      if (e.response.status === 404) {
-        return router.push("/");
-      }
-      if (e.response && e.response.data && e.response.data.message) {
-        return alert.error(e.response.data.message);
-      }
-      return alert.error(e.message);
+
+      const currentDate = new Date().getTime();
+      const startDate = response.data.poll.start_date;
+      const endDate = response.data.poll.end_date;
+
+      setPoll({
+        ...poll,
+        ...response.data.poll,
+        loading: false,
+        proposals: proposalsUpdate,
+        pieChartData: {
+          ...emptyPieChartData,
+          // labels: proposalsUpdate.map((p) => p.text),
+          datasets: [
+            {
+              ...emptyPieChartData.datasets[0],
+              data: proposalsUpdate.map((p) => Number(p.voteCount)),
+              backgroundColor: proposalsUpdate.map((p) => p.color.bg),
+              borderColor: proposalsUpdate.map((p) => p.color.border),
+            },
+          ],
+        },
+        isVotingStarted: currentDate - startDate > 0,
+        isVotingEnded: endDate - currentDate < 0,
+      });
+      setAlreadyVotedLoading(false);
     }
   };
 
