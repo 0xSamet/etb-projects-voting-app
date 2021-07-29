@@ -57,13 +57,13 @@ export default function Home() {
   const windowSize = useWindowSize();
 
   const projectStyles = useSpring({
-    from: { x: -100 },
-    to: { x: 0 },
+    from: { x: -100, opacity: 0 },
+    to: { x: 0, opacity: 1 },
     reset: state.projects.playAnimation,
   });
   const pollStyles = useSpring({
-    from: { x: 100 },
-    to: { x: 0 },
+    from: { x: 100, opacity: 0 },
+    to: { x: 0, opacity: 1 },
     reset: state.polls.playAnimation,
   });
 

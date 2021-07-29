@@ -278,12 +278,12 @@ a {
     }
     .header-logo {
       img {
-        max-width: 210px;
+        max-width: 195px;
         @media #{$br1350} {
-          max-width: 195px;
+          max-width: 180px;
         }
         @media #{$br950} {
-          max-width: 175px;
+          max-width: 165px;
         }
       }
     }
@@ -369,11 +369,12 @@ a {
         justify-content: center;
         align-items: center;
         .menu {
+          font-size: 12px;
           @media #{$br677} {
-            font-size: 13px;
+            font-size: 11px;
           }
           @media #{$br500} {
-            font-size: 12px;
+            font-size: 10px;
           }
         }
       }
@@ -381,7 +382,7 @@ a {
         display: flex;
         justify-content: center;
         .tabs-option {
-          font-size: 18px;
+          font-size: 16px;
           padding: 10px;
           border-radius: 5px;
           border: 1px solid #e0e1e2;
@@ -390,7 +391,7 @@ a {
           transition: background 0.15s, color 0.15s;
           color: rgba(0, 0, 0, 0.6);
           @media #{$br677} {
-            font-size: 15px;
+            font-size: 14px;
           }
           &.active {
             background: #a5a5a5;
@@ -909,6 +910,9 @@ a {
           transform: translateX(100%);
           @media #{$br1350} {
             transform: translateX(0);
+            top: 0px;
+            border-right: none;
+            border-top: none;
           }
           @media #{$br677} {
             width: 30px;
@@ -941,6 +945,9 @@ a {
           justify-content: center;
           align-items: center;
           background: #fff;
+          @media #{$br1350} {
+            margin-top: 0px;
+          }
         }
         canvas {
           padding: 5px;
