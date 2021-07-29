@@ -23,10 +23,6 @@ $br500: "(max-width: 500px)";
 $br478: "(max-width: 478px)";
 $br416: "(max-width: 416px)";
 
-/*    @media #{$br500} {
-      width: 4px;
-    }*/
-
 #__next {
   min-width: 100%;
   min-height: 100%;
@@ -991,7 +987,7 @@ a {
         display: flex;
         justify-content: center;
         .tabs-option {
-          font-size: 18px;
+          font-size: 16px;
           padding: 10px;
           border-radius: 5px;
           border: 1px solid #e0e1e2;
@@ -1000,7 +996,7 @@ a {
           transition: background 0.15s, color 0.15s;
           color: rgba(0, 0, 0, 0.6);
           @media #{$br677} {
-            font-size: 15px;
+            font-size: 14px;
           }
           &.active {
             background: #a5a5a5;
@@ -1008,6 +1004,17 @@ a {
           }
           &:nth-child(odd) {
             margin: 0 5px;
+          }
+        }
+      }
+      .admin-results-table {
+        .pagination {
+          font-size: 12px;
+          @media #{$br677} {
+            font-size: 11px;
+          }
+          @media #{$br500} {
+            font-size: 10px;
           }
         }
       }
