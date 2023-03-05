@@ -1,3 +1,9 @@
+##Sources
+- Idea: https://www.youtube.com/watch?v=PXi88fWRJ0I&t=1265s&ab_channel=EatTheBlocks
+- Demo Day: https://www.youtube.com/watch?v=5_BPKJwXdhQ&t=1418s&ab_channel=EatTheBlocks
+
+
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
